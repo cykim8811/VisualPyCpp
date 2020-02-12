@@ -3,6 +3,7 @@
 #include "TextManager.h"
 #include "SDL.h"
 #include <vector>
+#include "Parser.h"
 
 using namespace std;
 
@@ -22,6 +23,7 @@ private:
 	vector<int> linelength;
 
 	int pcursorx = 3;
+	Node parse;
 
 public:
 	int cursor_x = 3;
@@ -29,6 +31,8 @@ public:
 	int cursor_origin_x = 3;
 	int cursor_origin_y = 0;
 	bool clicked = false;
+	
+	int index = 0;
 
 	int line = 0;
 	string text;
@@ -44,4 +48,7 @@ public:
 	int get_cursor_origin();
 	void set_cursor(int index);
 	void set_cursor_origin(int index);
+
+	int draw_node(Node target);
+
 };

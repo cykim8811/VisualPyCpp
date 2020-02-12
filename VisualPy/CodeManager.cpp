@@ -70,6 +70,8 @@ CodeManager::CodeManager(TextManager* textmanager) {
 	cursor_arrow = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW);
 	cursor_bar = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_IBEAM);
 	text_update();
+	index = 0;
+	parse = parse_source(&text, &index);
 }
 
 CodeManager::~CodeManager() {
@@ -112,7 +114,10 @@ void CodeManager::onDraw(SDL_Renderer* renderer, int width, int height) {
 		// Draw Code
 		int j = 0;
 		for (; text[temp_codeindex] != '\n' && text.length() > temp_codeindex; temp_codeindex += 1) {
-			tm->draw_char(renderer, 36 + tm->width * j, tm->height * i + yoffset, text[temp_codeindex], { 64, 64, 64 });
+			//tm->draw_char(renderer, 36 + tm->width * j, tm->height * i + yoffset, text[temp_codeindex], { 64, 64, 64 });
+			int lastind = draw_node(parse);
+			// TODO: Sleepy
+
 			// Background color when selected
 			if ((temp_codeindex >= cursor_origin && temp_codeindex < cursor) ||
 				(temp_codeindex >= cursor && temp_codeindex < cursor_origin)) {

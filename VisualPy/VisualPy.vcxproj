@@ -153,13 +153,19 @@
     <ClCompile Include="CodeManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="OutputManager.cpp" />
+    <ClCompile Include="Parser.cpp" />
     <ClCompile Include="RamManager.cpp" />
+    <ClCompile Include="Statement.cpp" />
     <ClCompile Include="TextManager.cpp" />
+    <ClCompile Include="Format.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CodeManager.h" />
+    <ClInclude Include="Format.h" />
     <ClInclude Include="OutputManager.h" />
+    <ClInclude Include="Parser.h" />
     <ClInclude Include="RamManager.h" />
+    <ClInclude Include="Statement.h" />
     <ClInclude Include="TextManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
