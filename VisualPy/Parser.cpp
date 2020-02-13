@@ -1,4 +1,6 @@
+
 #include "Parser.h"
+#include "Statement.h"
 #include <iostream>
 
 using namespace std;
@@ -49,7 +51,7 @@ Format F_INT(OR, {
 		Format(FTN, is_digit_1),
 		Format(REP, {Format(FTN, is_digit_0)})
 	})
-});
+	});
 Format F_VAR(AND, {
 	Format(OR, {
 		Format(FTN, is_alphabet_a),
@@ -127,7 +129,7 @@ S s_call("calling", AND, {
 		S("", AND, {
 			S("(", "("),
 			S("variable", addr_calc), S("", REP, {
-				S("", AND, {SB, S(",", ","), SBN, S("variable", addr_calc)})
+				S("", AND, {SBN, S(",", ","), SBN, S("variable", addr_calc)})
 			}),
 			SBN, S(")", ")")
 		}),
@@ -145,6 +147,12 @@ S s_index("indexing", AND, {
 	S("]", "]")
 	});
 
+vector<string> reserved{
+"and", "assert", "break", "class", "continue", "def", "del", "elif", "else", "except", "exec", "finally",
+"for", "from", "global", "if", "import", "in", "is", "lambda", "not", "or", "pass", "raise", "return",
+"try", "while", "with", "yield"
+};
+
 Node single_addr(string* source, int* index) {
 	int ind;
 	Node target;
@@ -152,8 +160,17 @@ Node single_addr(string* source, int* index) {
 	ind = *index;
 	target = s_var.fit(source, &ind);
 	if (ind != -1) {
-		*index = ind;
-		return target;
+		bool n = false;
+		for (int i = 0; i < reserved.size(); i++) {
+			if (reserved[i] == target.subnode[0].data) {
+				n = true;
+				break;
+			}
+		}
+		if (!n) {
+			*index = ind;
+			return target;
+		}
 	}
 	// Number
 	ind = *index;
@@ -246,8 +263,13 @@ S signs("", OR, {
 	S("Tcalc_divide", AND, {SB, S("/"), SBN}),
 	S("Tcalc_equal", AND, {SB, S("=="), SBN}),
 	S("Tcalc_nequal", AND, {SB, S("!="), SBN}),
-	S("Tcalc_and", AND, {SB, S("!="), SBN}),
-	});
+	S("Tcalc_and", AND, {SB, S("and"), SBN}),
+	S("Tcalc_or", AND, {SB, S("or"), SBN}),
+	S("Tcalc_in", AND, {SB, S("in"), SBN}),
+	S("Tcalc_nis", AND, {SB, S("is not"), SBN}),
+	S("Tcalc_is", AND, {SB, S("is"), SBN}),
+	S("Tcalc_nin", AND, {SB, S("not in"), SBN}),
+});
 S fsigns("", OR, {
 	S("Tcalc_pos", AND, {
 		SB, S("+"), SBN,
@@ -261,7 +283,8 @@ S fsigns("", OR, {
 	S("Tcalc_not", AND, {
 		SB, S("not"), SBN,
 	})
-	});
+});
+
 Node addr_calc(string* source, int* index) {
 
 	vector<Node> calc_list;
@@ -359,7 +382,42 @@ Node addr_calc(string* source, int* index) {
 			}
 		}
 		for (int i = 0; i < calc_list.size(); i++) {
-			if (calc_list[i].name == "Tcalc_equal" || calc_list[i].name == "Tcalc_nequal") {
+			if (calc_list[i].name == "Tcalc_equal" || calc_list[i].name == "Tcalc_nequal" ||
+				calc_list[i].name == "Tcalc_in" || calc_list[i].name == "Tcalc_is" ||
+				calc_list[i].name == "Tcalc_nin" || calc_list[i].name == "Tcalc_nis") {
+				if (i == 0 || i == calc_list.size() - 1) { *index = -1; break; }
+				calc_list[i].subnode.insert(calc_list[i].subnode.begin(), { calc_list[i - 1] });
+				calc_list[i].subnode.push_back(calc_list[i + 1]);
+				calc_list[i].name.erase(calc_list[i].name.begin());
+				calc_list.erase(calc_list.begin() + i + 1);
+				calc_list.erase(calc_list.begin() + i - 1);
+				i = 0;
+				continue;
+			}
+		}
+		for (int i = calc_list.size() - 1; i >= 0; i--)  {
+			if (calc_list[i].name == "Tcalc_not") {
+				if (i == calc_list.size() - 1) { *index = -1; break; }
+				calc_list[i].subnode.push_back(calc_list[i + 1]);
+				calc_list[i].name.erase(calc_list[i].name.begin());
+				calc_list.erase(calc_list.begin() + i + 1);
+				continue;
+			}
+		}
+		for (int i = 0; i < calc_list.size(); i++) {
+			if (calc_list[i].name == "Tcalc_and") {
+				if (i == 0 || i == calc_list.size() - 1) { *index = -1; break; }
+				calc_list[i].subnode.insert(calc_list[i].subnode.begin(), { calc_list[i - 1] });
+				calc_list[i].subnode.push_back(calc_list[i + 1]);
+				calc_list[i].name.erase(calc_list[i].name.begin());
+				calc_list.erase(calc_list.begin() + i + 1);
+				calc_list.erase(calc_list.begin() + i - 1);
+				i = 0;
+				continue;
+			}
+		}
+		for (int i = 0; i < calc_list.size(); i++) {
+			if (calc_list[i].name == "Tcalc_or") {
 				if (i == 0 || i == calc_list.size() - 1) { *index = -1; break; }
 				calc_list[i].subnode.insert(calc_list[i].subnode.begin(), { calc_list[i - 1] });
 				calc_list[i].subnode.push_back(calc_list[i + 1]);
@@ -404,19 +462,40 @@ Node addr_tuple(string* source, int* index) {
 	return tp;
 }
 
+Node addr_tuple_nocalc(string* source, int* index) {
+	int ind = *index;
+	Node t = addr(source, &ind);
+	if (ind == -1) {
+		*index = -1;
+		return Node();
+	}
+	*index = ind;
+	Node tp = s_btuple.fit(source, &ind);
+	if (ind == -1 || ind == *index) {
+		return t;
+	}
+	tp.subnode.insert(tp.subnode.begin(), t);
+	*index = ind;
+	return tp;
+}
+
 Format import_path(AND, {
 	F_VAR, Format(REP, {Format(AND, {Format("."), F_VAR})})
 	});
 
 S phrase("", OR, {
-	S("assign", AND, { S("left", addr_tuple), SB, S("="), SBN, S("right", addr_tuple)}),
+	S("assign", AND, { S("left", addr_tuple_nocalc), SB, S("="), SBN, S("right", addr_tuple)}),
 	S("assign_add", AND, { S("left", addr), SB, S("+="), SBN, S("right", addr_tuple)}),
 	S("assign_sub", AND, { S("left", addr), SB, S("-="), SBN, S("right", addr_tuple)}),
 	S("import", AND, {S("import"), S("ignore", Format(AND, {Format(" "), Format(REP, {Format(" ")})})),
 		S("path", import_path), S("", OR, {S("", AND, {SB, S("as"), SB, S("name", F_VAR)}), S("")}),
 		S("", REP, {S("", AND, {SB, S(","), SB, S("path", import_path), S("", OR, {S("", AND, {SB, S("as"), SB, S("name", F_VAR)}), S("")})})})}),
-	S("return", AND, {S("return"), SB, S("", addr_tuple)}),
+	S("return", AND, {S("return"), S("ignore", " "), SB, S("", addr_tuple)}),
+	S("yield", AND, {S("yield"), S("ignore", " "), SB, S("", addr_tuple)}),
 	S("evaluate", addr_calc),
+	S("break"),
+	S("pass"),
+	S("continue"),
 	});
 
 S rmv("ignore", Format(REP, { Format(AND, { Format(REP, {Format(" ")}), Format("\n") }) }));
@@ -425,21 +504,21 @@ S rmv1("ignore", Format(AND, { Format(REP, {Format(" ")}), Format("\n") }));
 
 S s_statement("", OR, {
 	S("s_if", AND, {S("if"), SB, S("condition", addr_calc), SB, S(":"), SB, S("\n")}), // TODO: add if statement without newline
-	S("s_for", AND, {S("for"), SB, S("left", addr_tuple), SB, S("in"), SB, S("right", addr_tuple), SB, S(":"), SB, S("\n")}),
+	S("s_for", AND, {S("for"), SB, S("left", addr_tuple_nocalc), SB, S("in"), SB, S("right", addr_tuple), SB, S(":"), SB, S("\n")}),
 	S("s_def", AND, {S("def"), SB, S("name", F_VAR), SB, S("("), SB,
 		S("", OR, {
 		S("parameter", AND, { S("address", F_VAR), S("", OR, {S("default", AND, {SBN, S("="), SBN, S("", addr_calc)}), S("")}), SBN, S("", REP, {S("", AND, {S(","), SBN, S("address", F_VAR), S("", OR, {S("default", AND, {SBN, S("="), SBN, S("", addr_calc)}), S("")}), SBN})})
 		}), SBN}), S(")"), SB, S(":"), SB, S("\n")}),
-	S("s_class", AND, { S("class"), SB, S("name", F_VAR), SB, S("("), SBN, S("parent", import_path), S("", REP, {
+	S("s_class", AND, { S("class"), SB, S("name", F_VAR), SB, S("", OR, {S("", AND, {S("("), SBN, S("parent", import_path), S("", REP, {
 		S("", AND, { S(","), SBN, S("parent", import_path), SBN })
-	}), S(")"), SB, S(":"), SB, S("\n") }),
+	}), S(")")}), S("")}), SB, S(":"), SB, S("\n") }),
 	S("elif", AND, {
 		S("elif"), SB, S("condition", addr_calc), SB, S(":"), SB
 	}),
 	S("else", AND, {
 		S("else"), SB, S(":"), SB
 	}),
-	});
+});
 Node statement(string* source, int* index, int indent) {
 	vector<Node> ret;
 

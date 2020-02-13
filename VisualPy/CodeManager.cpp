@@ -22,6 +22,11 @@ int max(int a, int b) {
 	}
 }
 
+void CodeManager::analyze() {
+	lastparse = 0;
+	parse = parse_source(&text, &lastparse);
+}
+
 int CodeManager::get_cursor() {
 	int total = 0;
 	for (int i = 0; i < cursor_y; i++) {
@@ -79,6 +84,82 @@ CodeManager::~CodeManager() {
 	SDL_FreeCursor(cursor_bar);
 }
 
+typedef struct Coloring {
+	string name;
+	vector<string> key;
+	vector<SDL_Color> col;
+};
+
+
+vector<Coloring> coloring_list{
+	{"variable",
+	{"address",     "int",          "float",        "string",       "\""},
+	{{84, 104, 92}, {80, 112, 180}, {80, 112, 180}, {192, 128, 96}, {184, 112, 48} }},
+	
+	{"attribute", {".", "name"}, {{128, 128, 128}, {72,130,104}, }},
+
+	{"s_def", {"def", ",", }, {{24, 48, 160}, {150, 112, 96}, }},
+	{"s_if", {"if",}, {{24, 48, 160},}},
+	{"s_for", {"for", "in",}, {{24, 48, 160}, {24, 48, 160}, }},
+	{"return", {"return",}, {{24, 48, 160},}},
+	{"yield", {"yield",}, {{24, 48, 160},}},
+	{"lines", {"pass", "continue", "break", }, {{24, 48, 160}, {24, 48, 160}, {24, 48, 160}, }},
+	{"s_class", {"class", ",", }, {{24, 48, 160}, {130, 112, 96}, } },
+
+	{"list", {",", }, {{130, 112, 96}, } },
+	{"tuple", {",", }, {{130, 112, 96}, } },
+	{"indexing", {",", }, {{130, 112, 96}, } },
+	{"calling", {",", }, {{130, 112, 96}, } },
+
+	{"calc_is", {"is", }, {{72, 102, 140}, }},
+	{"calc_in", {"in", }, {{72, 102, 140}, }},
+	{"calc_nin", {"not in", }, {{72, 102, 140}, }},
+	{"calc_nis", {"is not", }, {{72, 102, 140}, }},
+
+	{"calc_not", {"not", }, {{72, 102, 140}, }},
+	{"calc_or", {"or", }, {{72, 102, 140}, }},
+	{"calc_and", {"and", }, {{72, 102, 140}, }},
+
+};
+
+void CodeManager::draw_node(SDL_Renderer* renderer, Node target, int* lx, int* ly, SDL_Color col) {
+	if (target.subnode.size() == 0) {
+		for (int i = 0; i < target.data.size(); i++) {
+			if (*ly < line) continue;
+			if (target.data[i] == '\n') {
+				*lx = 0;
+				*ly += 1;
+				continue;
+			}
+			tm->draw_char(renderer, 36 + tm->width * (*lx), tm->height * (*ly - line) + 2, target.data[i], col);
+			*lx += 1;
+		}
+	}
+	else {
+		for (int i = 0; i < target.subnode.size(); i++) {
+			SDL_Color tcol = { 96, 96, 96 };
+			for (int j = 0; j < coloring_list.size(); j++) {
+				if (target.name == coloring_list[j].name) {
+					for (int k = 0; k < coloring_list[j].key.size(); k++) {
+						if (coloring_list[j].key[k] == target.subnode[i].name) {
+							tcol = coloring_list[j].col[k];
+							break;
+						}
+					}
+					break;
+				}
+			}
+			draw_node(renderer, target.subnode[i], lx, ly, tcol);
+		}
+	}
+}
+
+void CodeManager::draw_code(SDL_Renderer* renderer) {
+	int lx = 0, ly = 0;
+	draw_node(renderer, parse, &lx, &ly);
+}
+
+
 void CodeManager::onDraw(SDL_Renderer* renderer, int width, int height) {
 	// Draw Background color
 	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
@@ -103,6 +184,10 @@ void CodeManager::onDraw(SDL_Renderer* renderer, int width, int height) {
 	int cursor = get_cursor();
 	int cursor_origin = get_cursor_origin();
 	// Drawing Screen
+
+	// Draw Code
+	draw_code(renderer);
+
 	for (int i = 0; i <lastline; i++) {
 		// Drawing linenumber
 		for (int j = 0; j < int(floor(log10(i + 1) + 1)); j++) {
@@ -111,12 +196,12 @@ void CodeManager::onDraw(SDL_Renderer* renderer, int width, int height) {
 			tm->draw_char(renderer, 30 - tm->width * (j + 1), tm->height * i + yoffset, c, {176, 176, 176});
 		}
 
-		// Draw Code
+
 		int j = 0;
 		for (; text[temp_codeindex] != '\n' && text.length() > temp_codeindex; temp_codeindex += 1) {
-			//tm->draw_char(renderer, 36 + tm->width * j, tm->height * i + yoffset, text[temp_codeindex], { 64, 64, 64 });
-			int lastind = draw_node(parse);
-			// TODO: Sleepy
+			if (temp_codeindex >= lastparse) {
+				tm->draw_char(renderer, 36 + tm->width * j, tm->height * i + yoffset, text[temp_codeindex], { 160, 160, 160 });
+			}
 
 			// Background color when selected
 			if ((temp_codeindex >= cursor_origin && temp_codeindex < cursor) ||
@@ -140,6 +225,8 @@ void CodeManager::onDraw(SDL_Renderer* renderer, int width, int height) {
 }
 
 void CodeManager::onUpdate(float dT) {
+	analyze();
+	if (doubleclick >= 0) { doubleclick--; }
 	if (cursorblink < 0.0) {
 		cursorblink = cursorblinkmax;
 	}
@@ -280,25 +367,27 @@ void CodeManager::onEvent(SDL_Event event) {
 		}
 		else if (event.key.keysym.sym == SDLK_v && SDL_GetModState() & KMOD_CTRL)
 		{
-			cursorblink = cursorblinkmax;
-			int cursor = get_cursor(),
-				cursor_origin = get_cursor_origin();
-
-			text.replace(min(cursor_origin, cursor),
-				max(cursor_origin, cursor) - min(cursor_origin, cursor), "");
-			cursor_origin = min(cursor_origin, cursor);
-			cursor = cursor_origin;
-
 			string target_text = SDL_GetClipboardText();
-			text.insert(
-				cursor,
-				target_text
-			);
-			cursor += target_text.size();
-			cursor_origin = cursor;
-			text_update();
-			set_cursor(cursor);
-			set_cursor_origin(cursor_origin);
+			if (target_text != "") {
+				cursorblink = cursorblinkmax;
+				int cursor = get_cursor(),
+					cursor_origin = get_cursor_origin();
+
+				text.replace(min(cursor_origin, cursor),
+					max(cursor_origin, cursor) - min(cursor_origin, cursor), "");
+				cursor_origin = min(cursor_origin, cursor);
+				cursor = cursor_origin;
+
+				text.insert(
+					cursor,
+					target_text
+				);
+				cursor += target_text.size();
+				cursor_origin = cursor;
+				text_update();
+				set_cursor(cursor);
+				set_cursor_origin(cursor_origin);
+			}
 		}
 		else if (event.key.keysym.sym == SDLK_x && SDL_GetModState() & KMOD_CTRL)
 		{
@@ -317,6 +406,16 @@ void CodeManager::onEvent(SDL_Event event) {
 			cursor_origin = min(cursor_origin, cursor);
 			cursor = cursor_origin;
 			text_update();
+			set_cursor(cursor);
+			set_cursor_origin(cursor_origin);
+		}
+		else if (event.key.keysym.sym == SDLK_a && SDL_GetModState() & KMOD_CTRL)
+		{
+			cursorblink = cursorblinkmax;
+			int cursor = get_cursor(),
+				cursor_origin = get_cursor_origin();
+			cursor_origin = 0;
+			cursor = text.length();
 			set_cursor(cursor);
 			set_cursor_origin(cursor_origin);
 		}
@@ -404,6 +503,11 @@ void CodeManager::text_update() {
 	int num_line = count(text.begin(), text.end(), '\n') + 1;
 	int cur_length = 0;
 	for (int i = 0; i < text.length(); i++) {
+		if (text[i] == '\r') {
+			text.erase(text.begin() + i);
+			i--;
+			continue;
+		}
 		if (text[i] == '\n') {
 			linelength.push_back(cur_length);
 			cur_length = 0;

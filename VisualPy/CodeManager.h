@@ -23,7 +23,8 @@ private:
 	vector<int> linelength;
 
 	int pcursorx = 3;
-	Node parse;
+
+	int doubleclick = -1;
 
 public:
 	int cursor_x = 3;
@@ -49,6 +50,12 @@ public:
 	void set_cursor(int index);
 	void set_cursor_origin(int index);
 
-	int draw_node(Node target);
+	Node parse;
+	int lastparse;
+
+	void draw_code(SDL_Renderer* renderer);
+	void draw_node(SDL_Renderer* renderer, Node target, int* lx, int* ly, SDL_Color col = {96, 128, 128});
+
+	void analyze();
 
 };

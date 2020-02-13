@@ -315,8 +315,9 @@ int main(int args, char* argv[]) {
 	arialtm = &atm;
 
 	CodeWindow->text = "def resize(_data, shape=(32, 32)):\n  o_shape = _data.shape\n  output = np.zeros(shape)\n  data = np.zeros((_data.shape[0] + 1, _data.shape[1] + 1))\n  data[-1, -1] = _data\n  for x in range(shape[0]) :\n    for y in range(shape[1]) : \n      tx = x * o_shape[0] / shape[0]\n      ty = y * o_shape[1] / shape[1]\n      rx, ry = tx % 1, ty % 1\n      tx, ty = floor(tx), floor(ty)\n      output[x, y] = data[tx, ty] * (1 - rx) * (1 - ry) \\\n    + data[tx + 1, ty] * rx * (1 - ry) \\\n    + data[tx, ty + 1] * (1 - rx) * ry \\\n    + data[tx + 1, ty + 1] * rx * ry\n  return output\n";
-
-	int index = 0;
+	CodeWindow->text = "not a";
+	CodeWindow->text_update();
+	CodeWindow->analyze();
 
 	arrowcursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW);
 
