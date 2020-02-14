@@ -100,8 +100,11 @@ int Format::fit(string* source, int index) {
 		}
 	}
 	else if (op == FTN) {
-		if (source->size() <= index)
+		if (source->size() <= index) {
+			string tst = "a\n";
+			return ftn(&tst, 1);
 			return -1;
+		}
 		return ftn(source, index);
 	}
 	else {

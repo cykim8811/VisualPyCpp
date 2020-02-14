@@ -5,6 +5,7 @@
 
 using namespace std;
 
+
 /* TODOS
 
 Multiline string
@@ -40,10 +41,18 @@ int is_string_sl_dq(string* source, int index) {
 	return index + 1;
 }
 
+int is_comment(string* source, int index) {
+	if (index >= source->size() || source->at(index) == '\n') {
+		return -1;
+	}
+	return index + 1;
+}
+
 //Format B(REP, { Format(" ") });
-Format B(REP, { Format(OR, { Format(" "), Format("\\\n") }) });
+//Format B(REP, { Format(OR, { Format(" "), Format(AND, {Format("\\"), Format(REP, {Format(" ")}), Format("\n")}) }) });
+Format B(REP, { Format(" ") });
 Format N(REP, { Format("\n") });
-Format BN(REP, { Format(OR, {B, N}) });
+Format BN(REP, { Format(OR, {Format(" "), Format("\n")}) });
 
 Format F_INT(OR, {
 	Format("0"),
@@ -78,7 +87,14 @@ Format F_FLO(AND, {
 
 
 S SB("ignore", B);
-S SBN("ignore", BN);
+S SN("", AND, {
+	S("", OR, {S("comment", AND, {
+		S("#"), S("text", Format(REP, {Format(FTN, is_comment)}))
+	}), S("") }),
+	S("ignore", "\n")
+});
+S SBN("", REP, { S("", OR, {S(" "), SN}) });
+// S SBN("ignore", BN);
 
 S s_var("variable", AND, { S("address", F_VAR) });
 S s_num("variable", OR, {
@@ -124,25 +140,32 @@ S s_attr("attribute", AND, {
 	S(".", "."),
 	S("name", F_VAR)
 	});
-S s_call("calling", AND, {
-	S("", OR, {
-		S("", AND, {
-			S("(", "("),
-			S("variable", addr_calc), S("", REP, {
-				S("", AND, {SBN, S(",", ","), SBN, S("variable", addr_calc)})
-			}),
-			SBN, S(")", ")")
+S s_call("calling", OR, {
+	S("", AND, {
+		S("(", "("), SBN, 
+		S("parameter", OR, {
+			S("", AND, {SBN, S("name", F_VAR), SBN, S("="), SBN, S("value", addr_calc)}),
+			S("", AND, {SBN, S("value", addr_calc)})
 		}),
-		S("", AND, {
-			S("(", "("), SBN,
-			S(")", ")")
-		})
+		S("", REP, {
+			S("", AND, {SBN, S(",", ","), SBN,
+			S("parameter", OR, {
+					S("", AND, {SBN, S("name", F_VAR), SBN, S("="), SBN, S("value", addr_calc)}),
+					S("", AND, {SBN, S("value", addr_calc)})
+				})
+			})
+		}),
+		SBN, S(")", ")")
+	}),
+	S("", AND, {
+		S("(", "("), SBN,
+		S(")", ")")
 	})
-	});
+});
 S s_index("indexing", AND, {
 	S("[", "["),
 	S("variable", addr_calc), S("", REP, {
-		S("", AND, {SB, S(",", ","), SBN, S("variable", addr_calc)}),
+		S("", AND, {SBN, S(",", ","), SBN, S("variable", addr_calc)}),
 	}), SBN,
 	S("]", "]")
 	});
@@ -479,6 +502,7 @@ Node addr_tuple_nocalc(string* source, int* index) {
 	return tp;
 }
 
+
 Format import_path(AND, {
 	F_VAR, Format(REP, {Format(AND, {Format("."), F_VAR})})
 	});
@@ -487,47 +511,120 @@ S phrase("", OR, {
 	S("assign", AND, { S("left", addr_tuple_nocalc), SB, S("="), SBN, S("right", addr_tuple)}),
 	S("assign_add", AND, { S("left", addr), SB, S("+="), SBN, S("right", addr_tuple)}),
 	S("assign_sub", AND, { S("left", addr), SB, S("-="), SBN, S("right", addr_tuple)}),
-	S("import", AND, {S("import"), S("ignore", Format(AND, {Format(" "), Format(REP, {Format(" ")})})),
-		S("path", import_path), S("", OR, {S("", AND, {SB, S("as"), SB, S("name", F_VAR)}), S("")}),
-		S("", REP, {S("", AND, {SB, S(","), SB, S("path", import_path), S("", OR, {S("", AND, {SB, S("as"), SB, S("name", F_VAR)}), S("")})})})}),
+	S("import", AND, {S("", OR, {S("from", AND, {S("from"), SB, S("path_from", import_path), SB}), S("")}),
+		S("import"), S("ignore", Format(AND, {Format(" "), Format(REP, {Format(" ")})})),
+		S("", OR, {
+		S("", AND, {S("path", import_path), S("", OR, {S("", AND, {SB, S("as"), SB, S("name", F_VAR)}), S("")}),
+		S("", REP, {S("", AND, {SB, S(","), SB, S("path", import_path), S("", OR, {S("", AND, {SB, S("as"), SB, S("name", F_VAR)}), S("")})})})
+			}),
+			S("*")
+			}) }),
 	S("return", AND, {S("return"), S("ignore", " "), SB, S("", addr_tuple)}),
 	S("yield", AND, {S("yield"), S("ignore", " "), SB, S("", addr_tuple)}),
-	S("evaluate", addr_calc),
+	S("evaluate", addr_tuple),
 	S("break"),
 	S("pass"),
 	S("continue"),
+	//S("comment", AND, {SB, S("#"), S("text", Format(REP, {Format(FTN, is_comment)}))}),
 	});
 
-S rmv("ignore", Format(REP, { Format(AND, { Format(REP, {Format(" ")}), Format("\n") }) }));
-S rmv1("ignore", Format(AND, { Format(REP, {Format(" ")}), Format("\n") }));
+// S rmv("ignore", Format(REP, { Format(AND, { Format(REP, {Format(" ")}), Format("\n") }) }));
+// S rmv1("ignore", Format(AND, { Format(REP, {Format(" ")}), Format("\n") }));
+S rmv("ignore", REP, { S("", AND, { SB, SN }) });
+S rmv1("ignore", AND, { SB, SN });
 // include # comment to rmv
 
 S s_statement("", OR, {
-	S("s_if", AND, {S("if"), SB, S("condition", addr_calc), SB, S(":"), SB, S("\n")}), // TODO: add if statement without newline
-	S("s_for", AND, {S("for"), SB, S("left", addr_tuple_nocalc), SB, S("in"), SB, S("right", addr_tuple), SB, S(":"), SB, S("\n")}),
+	S("s_if", AND, {S("if"), SB, S("condition", addr_calc), SB, S(":"), SB}), // TODO: add if statement without newline
+	S("s_while", AND, {S("while"), SB, S("condition", addr_calc), SB, S(":"), SB}),
+	S("s_for", AND, {S("for"), SB, S("left", addr_tuple_nocalc), SB, S("in"), SB, S("right", addr_tuple), SB, S(":"), SB}),
 	S("s_def", AND, {S("def"), SB, S("name", F_VAR), SB, S("("), SB,
 		S("", OR, {
 		S("parameter", AND, { S("address", F_VAR), S("", OR, {S("default", AND, {SBN, S("="), SBN, S("", addr_calc)}), S("")}), SBN, S("", REP, {S("", AND, {S(","), SBN, S("address", F_VAR), S("", OR, {S("default", AND, {SBN, S("="), SBN, S("", addr_calc)}), S("")}), SBN})})
-		}), SBN}), S(")"), SB, S(":"), SB, S("\n")}),
+		}), SBN}), S(")"), SB, S(":"), SB}),
 	S("s_class", AND, { S("class"), SB, S("name", F_VAR), SB, S("", OR, {S("", AND, {S("("), SBN, S("parent", import_path), S("", REP, {
 		S("", AND, { S(","), SBN, S("parent", import_path), SBN })
-	}), S(")")}), S("")}), SB, S(":"), SB, S("\n") }),
-	S("elif", AND, {
+	}), S(")")}), S("")}), SB, S(":"), SB }),
+	S("s_elif", AND, {
 		S("elif"), SB, S("condition", addr_calc), SB, S(":"), SB
 	}),
-	S("else", AND, {
+	S("s_else", AND, {
 		S("else"), SB, S(":"), SB
 	}),
 });
+
+S s_comment("comment", AND, { S("ignore", Format(REP, { Format(" ") })), S("#"), S("text", Format(REP, { Format(FTN, is_comment) })) });
+
 Node statement(string* source, int* index, int indent) {
 	vector<Node> ret;
 
 	string indstr;
 	for (int i = 0; i < indent; i++) {
-		indstr.append("  ");
+		indstr.append(indent_text);
 	}
 	S s_indent("indent", indstr);
 
+	S t_bl("", AND, { S("ignore", "\n"), S("ignore", Format(REP, {Format(" ")})) , S("", OR, {s_comment, S("")}) });
+
+	S t_st("", AND, { S("", REP, { t_bl }), s_indent, s_statement, S("ignore", Format(REP, {Format(" ")})) , S("", OR, {s_comment, S("")}) });
+	S t_ph("", AND, { S("", REP, { t_bl }), s_indent, phrase, S("", OR, {s_comment, S("")}) });
+
+	int ind;
+	int lastst = -1;
+	Node r;
+	for (int i = 0; true; i++) {
+		
+		
+		ind = *index;
+		r = t_st.fit(source, &ind);
+		if (ind != -1) {
+			*index = ind;
+			// Statement lines
+			Node lines = statement(source, &ind, indent + 1);
+			if (ind == -1) {
+				return Node{ "", "", ret };
+			}
+			lines.name = "lines";
+			r.subnode.push_back(lines);
+			
+			if (r.name == "s_else" || r.name == "s_elif") {
+				if (lastst == -1) {
+					cout << 1 << endl;
+					return Node{ "", "", ret };
+				}
+				ret.push_back(r);
+				ret[lastst].subnode.insert(ret[lastst].subnode.end(), ret.begin() + lastst + 1, ret.end());
+				ret.erase(ret.begin() + lastst + 1, ret.end());
+			}
+			else {
+				cout << r.name << endl;
+				lastst = ret.size();
+				ret.push_back(r);
+			}
+			
+			*index = ind;
+			continue;
+		}
+
+		ind = *index;
+		r = t_ph.fit(source, &ind);
+		if (ind != -1) {
+			ret.push_back(r);
+			*index = ind;
+			continue;
+		}
+
+		ind = *index;
+		r = t_bl.fit(source, &ind);
+		if (ind != -1) {
+			ret.push_back(r);
+			*index = ind;
+			continue;
+		}
+		return Node{ "", "", ret };
+	}
+	
+	/*
 	int lastst = -1;
 
 	int ind;
@@ -538,6 +635,12 @@ Node statement(string* source, int* index, int indent) {
 			Node r1 = rmv.fit(source, &ind);
 			Node tind = s_indent.fit(source, &ind);
 			if (ind == -1) {
+				ind = *index;
+				r1 = rmv.fit(source, &ind);
+				if (ind != -1) {
+					ret.push_back(r1);
+					*index = ind;
+				}
 				return Node{ "", "", ret };
 			}
 			ret.push_back(r);
@@ -546,12 +649,14 @@ Node statement(string* source, int* index, int indent) {
 			*index = ind;
 		}
 		else {
-			Node r = rmv.fit(source, &ind);
+
+			Node r = rmv1.fit(source, &ind);
 			if (ind == -1) {
 				ind = *index;
 			}
 			else {
 				ret.push_back(r);
+				*index = ind;
 			}
 			Node tind = s_indent.fit(source, &ind);
 			if (ind != -1) {
@@ -597,7 +702,9 @@ Node statement(string* source, int* index, int indent) {
 			continue;
 		}
 		return Node{ "", "", ret };
+		
 	}
+	*/
 }
 
 Node parse_source(string* source, int* index) {

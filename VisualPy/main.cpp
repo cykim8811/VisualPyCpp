@@ -82,7 +82,20 @@ void onEvent(SDL_Event event) {
 		}
 		break;
 	case SDL_MOUSEMOTION:
+		SDL_Event e1(event);
+		e1.button.x -= sepbar_width;
+		e1.button.y -= title_height + menu_height;
+		RamWindow->onEvent(e1);
+		SDL_Event e2(event);
+		e2.button.x -= sepbar1_x + sepbar_offset;
+		e2.button.y -= title_height + menu_height;
+		CodeWindow->onEvent(e2);
+		SDL_Event e3(event);
+		e3.button.x -= sepbar2_x + sepbar_offset;
+		e3.button.y -= title_height + menu_height;
+		OutputWindow->onEvent(e3);
 		if (event.button.y > title_height + menu_height && event.button.y < window_height - statusbar_height) {
+			/*
 			if (event.button.x > sepbar_width && event.button.x < sepbar1_x - sepbar_offset) {
 				SDL_Event e(event);
 				e.button.x -= sepbar_width;
@@ -104,6 +117,7 @@ void onEvent(SDL_Event event) {
 			else {
 				cursorOut = true;
 			}
+			*/
 		}
 		else {
 			cursorOut = true;
@@ -293,7 +307,7 @@ int main(int args, char* argv[]) {
 		SDL_WINDOWPOS_CENTERED,
 		1280, 720, SDL_WINDOW_RESIZABLE
 	);
-	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED|SDL_RENDERER_TARGETTEXTURE);
+	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_TARGETTEXTURE); // SDL_RENDERER_ACCELERATED|
 	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 	font = TTF_OpenFont("Cascadia.ttf", 14);
 	arialfont = TTF_OpenFont("Cascadia.ttf", 14);
@@ -351,7 +365,7 @@ int main(int args, char* argv[]) {
 		onDraw(renderer);
 		SDL_RenderPresent(renderer);
 		prevTime = currTime;
-		SDL_Delay(1);
+		SDL_Delay(10);
 	}
 
 	SDL_StopTextInput();

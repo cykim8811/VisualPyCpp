@@ -101,10 +101,13 @@ vector<Coloring> coloring_list{
 	{"s_def", {"def", ",", }, {{24, 48, 160}, {150, 112, 96}, }},
 	{"s_if", {"if",}, {{24, 48, 160},}},
 	{"s_for", {"for", "in",}, {{24, 48, 160}, {24, 48, 160}, }},
+	{"s_while", {"while", }, {{24, 48, 160}, {24, 48, 160}, }},
 	{"return", {"return",}, {{24, 48, 160},}},
 	{"yield", {"yield",}, {{24, 48, 160},}},
 	{"lines", {"pass", "continue", "break", }, {{24, 48, 160}, {24, 48, 160}, {24, 48, 160}, }},
 	{"s_class", {"class", ",", }, {{24, 48, 160}, {130, 112, 96}, } },
+	{"s_else", {"else",}, {{24, 48, 160},}},
+	{"s_elif", {"elif",}, {{24, 48, 160},}},
 
 	{"list", {",", }, {{130, 112, 96}, } },
 	{"tuple", {",", }, {{130, 112, 96}, } },
@@ -120,6 +123,7 @@ vector<Coloring> coloring_list{
 	{"calc_or", {"or", }, {{72, 102, 140}, }},
 	{"calc_and", {"and", }, {{72, 102, 140}, }},
 
+	{"comment", {"#", "text", }, {{32, 128, 48}, {32, 128, 48}, } },
 };
 
 void CodeManager::draw_node(SDL_Renderer* renderer, Node target, int* lx, int* ly, SDL_Color col) {
@@ -225,7 +229,7 @@ void CodeManager::onDraw(SDL_Renderer* renderer, int width, int height) {
 }
 
 void CodeManager::onUpdate(float dT) {
-	analyze();
+	// analyze();
 	if (doubleclick >= 0) { doubleclick--; }
 	if (cursorblink < 0.0) {
 		cursorblink = cursorblinkmax;
@@ -269,14 +273,10 @@ void CodeManager::onEvent(SDL_Event event) {
 	case SDL_MOUSEMOTION:
 		if (clicked) {
 			SDL_SetCursor(cursor_bar);
-
-			text_update();
+			//text_update();
 			cursorblink = cursorblinkmax;
-			int px = int(floor((event.button.x - 32) / tm->width)) + line;
-			int py = int(floor((event.button.y - 4) / tm->height));
-			if (px < 0 || py < 0) {
-				break;
-			}
+			int px = max(0, int(floor((event.button.x - 32) / tm->width)) + line);
+			int py = max(0, int(floor((event.button.y - 4) / tm->height)));
 			int n_line = linelength.size();
 			// Clicking after last line
 			if (py > n_line - 1) {
@@ -309,6 +309,7 @@ void CodeManager::onEvent(SDL_Event event) {
 		cursor = cursor_origin;
 		text_update();
 		set_cursor(cursor);
+		pcursorx = cursor_x;
 		set_cursor_origin(cursor_origin);
 		break;
 	}
@@ -332,6 +333,7 @@ void CodeManager::onEvent(SDL_Event event) {
 			}
 			text_update();
 			set_cursor(cursor);
+			pcursorx = cursor_x;
 			set_cursor_origin(cursor_origin);
 		}
 		else if (event.key.keysym.sym == SDLK_DELETE) {
@@ -351,6 +353,7 @@ void CodeManager::onEvent(SDL_Event event) {
 			}
 			text_update();
 			set_cursor(cursor);
+			pcursorx = cursor_x;
 			set_cursor_origin(cursor_origin);
 		}
 		else if (event.key.keysym.sym == SDLK_c && SDL_GetModState() & KMOD_CTRL)
@@ -382,11 +385,12 @@ void CodeManager::onEvent(SDL_Event event) {
 					cursor,
 					target_text
 				);
-				cursor += target_text.size();
-				cursor_origin = cursor;
 				text_update();
+				cursor += target_text.size() - count(target_text.begin(), target_text.end(), '\r');
+				cursor_origin = cursor;
 				set_cursor(cursor);
 				set_cursor_origin(cursor_origin);
+				pcursorx = cursor_x;
 			}
 		}
 		else if (event.key.keysym.sym == SDLK_x && SDL_GetModState() & KMOD_CTRL)
@@ -407,6 +411,7 @@ void CodeManager::onEvent(SDL_Event event) {
 			cursor = cursor_origin;
 			text_update();
 			set_cursor(cursor);
+			pcursorx = cursor_x;
 			set_cursor_origin(cursor_origin);
 		}
 		else if (event.key.keysym.sym == SDLK_a && SDL_GetModState() & KMOD_CTRL)
@@ -488,11 +493,32 @@ void CodeManager::onEvent(SDL_Event event) {
 				cursor_origin_x = cursor_x;
 			}
 		}
+		else if (event.key.keysym.sym == SDLK_TAB) {
+			cursorblink = cursorblinkmax;
+			int cursor = get_cursor(),
+				cursor_origin = get_cursor_origin();
+			if (cursor_x == cursor_origin_x && cursor_y == cursor_origin_y) {
+				text.insert(cursor, indent_text);
+				cursor += indent_text.size();
+				cursor_origin = cursor;
+			}
+			else {
+				for (int i = min(cursor_y, cursor_origin_y); i < max(cursor_y, cursor_origin_y) + 1; i++) {
+					//TODO: indent selected lines
+				}
+			}
+			text_update();
+			set_cursor(cursor);
+			set_cursor_origin(cursor_origin);
+		}
 		break;
 		// TODO: add undo and redo
 		// TODO: tab key and others
 		// TODO: add scroll bar system
 	}
+	case SDL_MOUSEWHEEL:
+
+		break;
 	default:
 		break;
 	}
@@ -517,4 +543,5 @@ void CodeManager::text_update() {
 		}
 	}
 	linelength.push_back(cur_length);
+	analyze();
 }
