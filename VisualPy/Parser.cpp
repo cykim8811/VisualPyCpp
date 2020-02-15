@@ -535,7 +535,7 @@ S rmv1("ignore", AND, { SB, SN });
 // include # comment to rmv
 
 S s_statement("", OR, {
-	S("s_if", AND, {S("if"), SB, S("condition", addr_calc), SB, S(":"), SB}), // TODO: add if statement without newline
+	S("s_if", AND, {S("if"), SB, S("condition", addr_calc), SB, S(":"), SB, }), // TODO: add if statement without newline
 	S("s_while", AND, {S("while"), SB, S("condition", addr_calc), SB, S(":"), SB}),
 	S("s_for", AND, {S("for"), SB, S("left", addr_tuple_nocalc), SB, S("in"), SB, S("right", addr_tuple), SB, S(":"), SB}),
 	S("s_def", AND, {S("def"), SB, S("name", F_VAR), SB, S("("), SB,
@@ -553,7 +553,7 @@ S s_statement("", OR, {
 	}),
 });
 
-S s_comment("comment", AND, { S("ignore", Format(REP, { Format(" ") })), S("#"), S("text", Format(REP, { Format(FTN, is_comment) })) });
+S s_comment("comment", AND, { S("#"), S("text", Format(REP, { Format(FTN, is_comment) })) });
 
 Node statement(string* source, int* index, int indent) {
 	vector<Node> ret;
@@ -564,66 +564,188 @@ Node statement(string* source, int* index, int indent) {
 	}
 	S s_indent("indent", indstr);
 
-	S t_bl("", AND, { S("ignore", "\n"), S("ignore", Format(REP, {Format(" ")})) , S("", OR, {s_comment, S("")}) });
+	S t_st("", AND, {
+		s_indent,
+		s_statement,
+		SB,
+		S("", OR, { s_comment, S("") }),
+		S("\n"), 
+	});
+	S t_ph("", AND, {
+		s_indent,
+		phrase,
+		SB,
+		S("", OR, { s_comment, S("") })
+	});
+	S nl("", AND, { S("ignore", Format(REP, { Format(" ") })), S("\n") });
+	S bl("", AND, {
+		SB, S("", OR, { s_comment, S("")}), S("\n")
+	});
+	S blr("", AND, {
+		SB, S("", OR, { s_comment, S("")})
+	});
 
-	S t_st("", AND, { S("", REP, { t_bl }), s_indent, s_statement, S("ignore", Format(REP, {Format(" ")})) , S("", OR, {s_comment, S("")}) });
-	S t_ph("", AND, { S("", REP, { t_bl }), s_indent, phrase, S("", OR, {s_comment, S("")}) });
-
-	int ind;
-	int lastst = -1;
+	int ind = *index;
 	Node r;
+	vector<Node> temp;
+	int lastst = 0;
 	for (int i = 0; true; i++) {
-		
-		
+		temp.clear();
 		ind = *index;
-		r = t_st.fit(source, &ind);
-		if (ind != -1) {
-			*index = ind;
-			// Statement lines
-			Node lines = statement(source, &ind, indent + 1);
+		if (i != 0) {
+			r = nl.fit(source, &ind);
+			temp.push_back(r);
 			if (ind == -1) {
 				return Node{ "", "", ret };
 			}
+		}
+
+		int iind;
+
+		iind = ind;
+		r = t_st.fit(source, &iind);
+		if (iind != -1) {
+			*index = iind;
+			temp.insert(temp.end(), r.subnode.begin(), r.subnode.end());
+
+			// Lines in Statement
+			int iiind = iind;
+			Node lines = statement(source, &iind, indent + 1);
+
+			if (iind == -1) {
+				*index = iiind;
+				return Node{ "", "", ret };
+			}
+
 			lines.name = "lines";
-			r.subnode.push_back(lines);
+
+			temp.push_back(lines);
+			lastst = temp.size() - 4;
+
+			temp[lastst].subnode.insert(temp[lastst].subnode.end(), temp.begin() + lastst + 1, temp.end());
+			temp.erase(temp.begin() + lastst + 1, temp.end());
 			
-			if (r.name == "s_else" || r.name == "s_elif") {
-				if (lastst == -1) {
-					cout << 1 << endl;
-					return Node{ "", "", ret };
-				}
-				ret.push_back(r);
-				ret[lastst].subnode.insert(ret[lastst].subnode.end(), ret.begin() + lastst + 1, ret.end());
-				ret.erase(ret.begin() + lastst + 1, ret.end());
-			}
-			else {
-				cout << r.name << endl;
-				lastst = ret.size();
-				ret.push_back(r);
-			}
-			
-			*index = ind;
+
+			*index = iind;
+			ret.insert(ret.end(), temp.begin(), temp.end());
 			continue;
 		}
 
-		ind = *index;
-		r = t_ph.fit(source, &ind);
-		if (ind != -1) {
-			ret.push_back(r);
-			*index = ind;
+		iind = ind;
+		r = t_ph.fit(source, &iind);
+		if (iind != -1) {
+			temp.insert(temp.end(), r.subnode.begin(), r.subnode.end());
+			*index = iind;
+			ret.insert(ret.end(), temp.begin(), temp.end());
 			continue;
 		}
 
-		ind = *index;
-		r = t_bl.fit(source, &ind);
-		if (ind != -1) {
-			ret.push_back(r);
-			*index = ind;
+		iind = ind;
+		r = bl.fit(source, &iind);
+		if (iind != -1) {
+			iind = ind;
+			r = blr.fit(source, &iind);
+			temp.insert(temp.end(), r.subnode.begin(), r.subnode.end());
+			*index = iind;
+			ret.insert(ret.end(), temp.begin(), temp.end());
 			continue;
 		}
+
 		return Node{ "", "", ret };
+
+
 	}
-	
+
+
+
+
+	/*
+	int ind = *index;
+	Node r;
+	int iind;
+	for (int i = 0; true; i++) {
+
+		vector<Node> tn;
+		if (i != 0) {
+			ind = *index;
+			r = SN.fit(source, &ind);
+			if (ind == -1) {
+				return Node{ "", "", ret };
+			}
+			tn.push_back(r);
+		}
+
+			iind = ind;
+			r = S("ignore", Format(REP, {Format(" ")})).fit(source, &iind);
+			if (iind != -1) {
+				tn.push_back(r);
+				ind = iind;
+			}
+
+			iind = ind;
+			r = s_indent.fit(source, &ind);
+			if (ind == -1) {
+				return Node{ "", "", ret };
+			}
+			iind = ind;
+
+			ind = iind;
+			// Statement
+			r = s_statement.fit(source, &ind);
+			if (ind != -1) {
+				tn.push_back(r);
+
+				iind = ind;
+				r = SB.fit(source, &iind);
+				if (iind != -1) {
+					tn.push_back(r);
+					ind = iind;
+				}
+
+				int iind = ind;
+				r = s_comment.fit(source, &iind);
+				if (iind != -1) {
+					tn.push_back(r);
+					ind = iind;
+				}
+				ret.insert(ret.end(), tn.begin(), tn.end());
+				tn.clear();
+				*index = ind;
+
+				continue;
+			}
+
+			ind = iind;
+			// Phrase
+			r = phrase.fit(source, &ind);
+			if (ind != -1) {
+				tn.push_back(r);
+
+				iind = ind;
+				r = SB.fit(source, &iind);
+				if (iind != -1) {
+					tn.push_back(r);
+					ind = iind;
+				}
+
+				int iind = ind;
+				r = s_comment.fit(source, &iind);
+				if (iind != -1) {
+					tn.push_back(r);
+					ind = iind;
+				}
+				ret.insert(ret.end(), tn.begin(), tn.end());
+				tn.clear();
+				*index = ind;
+				continue;
+			}
+
+			return Node{ "", "", ret };
+
+
+
+	}
+	*/
 	/*
 	int lastst = -1;
 
@@ -705,6 +827,7 @@ Node statement(string* source, int* index, int indent) {
 		
 	}
 	*/
+	
 }
 
 Node parse_source(string* source, int* index) {
