@@ -14,5 +14,6 @@ int is_alphabet_A(string* source, int index);
 Node addr(string* source, int* index);
 Node addr_calc(string* source, int* index);
 Node addr_tuple(string* source, int* index);
+Node addr_tuple_nocalc(string* source, int* index);
 
 Node parse_source(string* source, int* index);
