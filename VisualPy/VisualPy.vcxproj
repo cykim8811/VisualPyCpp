@@ -151,9 +151,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CodeManager.cpp" />
+    <ClCompile Include="Executer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="OutputManager.cpp" />
     <ClCompile Include="Parser.cpp" />
+    <ClCompile Include="Piece.cpp" />
     <ClCompile Include="RamManager.cpp" />
     <ClCompile Include="Statement.cpp" />
     <ClCompile Include="TextManager.cpp" />
@@ -161,9 +163,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CodeManager.h" />
+    <ClInclude Include="Executer.h" />
     <ClInclude Include="Format.h" />
     <ClInclude Include="OutputManager.h" />
     <ClInclude Include="Parser.h" />
+    <ClInclude Include="Piece.h" />
     <ClInclude Include="RamManager.h" />
     <ClInclude Include="Statement.h" />
     <ClInclude Include="TextManager.h" />

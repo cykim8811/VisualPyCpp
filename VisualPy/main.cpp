@@ -24,12 +24,13 @@ CodeManager* CodeWindow;
 OutputManager* OutputWindow;
 RamManager* RamWindow;
 
+
 namespace layout {
 	int title_height = 48;
 	int menu_height = 24;
 	int statusbar_height = 18;
-	float sepbar1_ratio = 0.25;
-	float sepbar2_ratio = 0.7;
+	int sepbar1_w = 320;
+	int sepbar2_w = 320;
 	int sepbar_width = 5;
 
 	int font_width = 8;
@@ -49,8 +50,8 @@ void onEvent(SDL_Event event) {
 	SDL_GetWindowSize(window, &window_width, &window_height);
 
 	int sepbar_offset = int(floor((sepbar_width - 1) / 2));
-	int sepbar1_x = int(floor(window_width * sepbar1_ratio)),
-		sepbar2_x = int(floor(window_width * sepbar2_ratio));
+	int sepbar1_x = sepbar1_w,
+		sepbar2_x = window_width - sepbar2_w;
 	bool cursorOut = false;
 	switch (event.type)
 	{
@@ -63,6 +64,10 @@ void onEvent(SDL_Event event) {
 					e.button.y -= title_height + menu_height;
 					RamWindow->onEvent(e);
 					RamWindow->clicked = true;
+
+					CodeWindow->focused = false;
+					RamWindow->focused = true;
+					OutputWindow->focused = false;
 				}
 				else if (event.button.x > sepbar1_x + sepbar_offset && event.button.x < sepbar2_x - sepbar_offset) {
 					SDL_Event e(event);
@@ -70,6 +75,10 @@ void onEvent(SDL_Event event) {
 					e.button.y -= title_height + menu_height;
 					CodeWindow->onEvent(e);
 					CodeWindow->clicked = true;
+
+					CodeWindow->focused = true;
+					RamWindow->focused = false;
+					OutputWindow->focused = false;
 				}
 				else if (event.button.x > sepbar2_x + sepbar_offset && event.button.x < window_width - sepbar_width) {
 					SDL_Event e(event);
@@ -77,6 +86,10 @@ void onEvent(SDL_Event event) {
 					e.button.y -= title_height + menu_height;
 					OutputWindow->onEvent(e);
 					OutputWindow->clicked = true;
+
+					CodeWindow->focused = false;
+					RamWindow->focused = false;
+					OutputWindow->focused = true;
 				}
 			}
 		}
@@ -94,35 +107,7 @@ void onEvent(SDL_Event event) {
 		e3.button.x -= sepbar2_x + sepbar_offset;
 		e3.button.y -= title_height + menu_height;
 		OutputWindow->onEvent(e3);
-		if (event.button.y > title_height + menu_height && event.button.y < window_height - statusbar_height) {
-			/*
-			if (event.button.x > sepbar_width && event.button.x < sepbar1_x - sepbar_offset) {
-				SDL_Event e(event);
-				e.button.x -= sepbar_width;
-				e.button.y -= title_height + menu_height;
-				RamWindow->onEvent(e);
-			}
-			else if (event.button.x > sepbar1_x + sepbar_offset && event.button.x < sepbar2_x - sepbar_offset) {
-				SDL_Event e(event);
-				e.button.x -= sepbar1_x + sepbar_offset;
-				e.button.y -= title_height + menu_height;
-				CodeWindow->onEvent(e);
-			}
-			else if (event.button.x > sepbar2_x + sepbar_offset && event.button.x < window_width - sepbar_width) {
-				SDL_Event e(event);
-				e.button.x -= sepbar2_x + sepbar_offset;
-				e.button.y -= title_height + menu_height;
-				OutputWindow->onEvent(e);
-			}
-			else {
-				cursorOut = true;
-			}
-			*/
-		}
-		else {
-			cursorOut = true;
-		}
-		if (cursorOut) {
+		if (!(event.button.y > title_height + menu_height && event.button.y < window_height - statusbar_height)) {
 			// Mouse moved out of all screen
 			// Set cursor to arrow(default)
 			SDL_SetCursor(arrowcursor);
@@ -149,9 +134,15 @@ void onEvent(SDL_Event event) {
 		break;
 	case SDL_KEYDOWN:
 	case SDL_TEXTINPUT:
-		RamWindow->onEvent(event);
-		CodeWindow->onEvent(event);
-		OutputWindow->onEvent(event);
+		if (RamWindow->focused) {
+			RamWindow->onEvent(event);
+		}
+		if (CodeWindow->focused) {
+			CodeWindow->onEvent(event);
+		}
+		if (OutputWindow->focused) {
+			OutputWindow->onEvent(event);
+		}
 		break;
 	default:
 		break;
@@ -169,8 +160,8 @@ void onDraw(SDL_Renderer* renderer) {
 	int window_width, window_height;
 	SDL_GetWindowSize(window, &window_width, &window_height);
 
-	int sepbar1_x = int(floor(window_width * sepbar1_ratio)),
-		sepbar2_x = int(floor(window_width * sepbar2_ratio));
+	int sepbar1_x = sepbar1_w,
+		sepbar2_x = window_width - sepbar2_w;
 
 	int sepbar_offset = int(floor((sepbar_width - 1) / 2));
 	
@@ -328,8 +319,7 @@ int main(int args, char* argv[]) {
 
 	arialtm = &atm;
 
-	CodeWindow->text = "def resize(_data, shape=(32, 32)):\n  o_shape = _data.shape\n  output = np.zeros(shape)\n  data = np.zeros((_data.shape[0] + 1, _data.shape[1] + 1))\n  data[-1, -1] = _data\n  for x in range(shape[0]) :\n    for y in range(shape[1]) : \n      tx = x * o_shape[0] / shape[0]\n      ty = y * o_shape[1] / shape[1]\n      rx, ry = tx % 1, ty % 1\n      tx, ty = floor(tx), floor(ty)\n      output[x, y] = data[tx, ty] * (1 - rx) * (1 - ry) \\\n    + data[tx + 1, ty] * rx * (1 - ry) \\\n    + data[tx, ty + 1] * (1 - rx) * ry \\\n    + data[tx + 1, ty + 1] * rx * ry\n  return output\n";
-	CodeWindow->text = "not a";
+	CodeWindow->text = "print(\"Hello, World!\")\n";
 	CodeWindow->text_update();
 	CodeWindow->analyze();
 

@@ -9,6 +9,7 @@ using namespace std;
 class RamManager {
 public:
 	bool clicked = false;
+	bool focused = false;
 
 	int line = 0;
 	string text;

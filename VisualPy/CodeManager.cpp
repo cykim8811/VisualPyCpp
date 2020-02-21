@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <iostream>
 
+#include "Piece.h"
+
 using namespace std;
 
 int min(int a, int b) {
@@ -24,7 +26,7 @@ int max(int a, int b) {
 
 void CodeManager::analyze() {
 	lastparse = 0;
-	parse = parse_source(&text, &lastparse);
+	parse = P(parse_source(&text, &lastparse)); // Stop Point
 }
 
 int CodeManager::get_cursor() {
@@ -93,7 +95,7 @@ typedef struct Coloring {
 
 vector<Coloring> coloring_list{
 	{"variable",
-	{"address",     "int",          "float",        "string",       "\""},
+	{"address",     "int",          "float",        "string",       "\""            },
 	{{84, 104, 92}, {80, 112, 180}, {80, 112, 180}, {192, 128, 96}, {184, 112, 48} }},
 	
 	{"attribute", {".", "name"}, {{128, 128, 128}, {72,112,104}, }},
@@ -163,9 +165,42 @@ void CodeManager::draw_node(SDL_Renderer* renderer, Node target, int* lx, int* l
 	}
 }
 
+void CodeManager::draw_piece(SDL_Renderer* renderer, Node target, int* lx, int* ly, SDL_Color col) {
+	if (target.subnode.size() == 0) {
+		for (int i = 0; i < target.data.size(); i++) {
+			if (*ly < line) continue;
+			if (target.data[i] == '\n') {
+				*lx = 0;
+				*ly += 1;
+				continue;
+			}
+			tm->draw_char(renderer, 36 + tm->width * (*lx), tm->height * (*ly - line) + 2, target.data[i], col);
+			*lx += 1;
+		}
+	}
+	else {
+		for (int i = 0; i < target.subnode.size(); i++) {
+			SDL_Color tcol = { 96, 96, 96 };
+			for (int j = 0; j < coloring_list.size(); j++) {
+				if (target.name == coloring_list[j].name) {
+					for (int k = 0; k < coloring_list[j].key.size(); k++) {
+						if (coloring_list[j].key[k] == target.subnode[i].name) {
+							tcol = coloring_list[j].col[k];
+							break;
+						}
+					}
+					break;
+				}
+			}
+			draw_piece(renderer, target.subnode[i], lx, ly, tcol);
+		}
+	}
+}
+
+
 void CodeManager::draw_code(SDL_Renderer* renderer) {
 	int lx = 0, ly = 0;
-	draw_node(renderer, parse, &lx, &ly);
+	draw_piece(renderer, parse, &lx, &ly);
 }
 
 
@@ -225,7 +260,7 @@ void CodeManager::onDraw(SDL_Renderer* renderer, int width, int height) {
 		temp_codeindex++;
 	}
 	// Draw Cursor
-	if ((cursorStatus == 0) && cursorblink > cursorblinkmax * 0.5) {
+	if (focused && (cursorStatus == 0) && cursorblink > cursorblinkmax * 0.5) {
 		SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255);
 		SDL_RenderDrawLine(renderer, 35 + tm->width * cursor_x, tm->height * cursor_y + yoffset, 35 + tm->width * cursor_x, tm->height * (cursor_y + 1) + yoffset - 1);
 		SDL_SetRenderDrawColor(renderer, 128, 128, 128, 96);

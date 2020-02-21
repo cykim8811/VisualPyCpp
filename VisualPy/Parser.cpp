@@ -145,24 +145,24 @@ S s_attr("attribute", AND, {
 	S(".", "."),
 	S("name", F_VAR)
 	});
-S s_call("calling", OR, {
-	S("", AND, {
+S s_call("", OR, {
+	S("calling", AND, {
 		S("(", "("), SBN, 
-		S("parameter", OR, {
-			S("", AND, {SBN, S("name", F_VAR), SBN, S("="), SBN, S("value", addr_calc)}),
-			S("", AND, {SBN, S("value", addr_calc)})
+		S("", OR, {
+			S("parameter", AND, {SBN, S("name", F_VAR), SBN, S("="), SBN, S("value", addr_calc)}),
+			S("parameter", AND, {SBN, S("value", addr_calc)})
 		}),
 		S("", REP, {
 			S("", AND, {SBN, S(",", ","), SBN,
-			S("parameter", OR, {
-					S("", AND, {SBN, S("name", F_VAR), SBN, S("="), SBN, S("value", addr_calc)}),
-					S("", AND, {SBN, S("value", addr_calc)})
+			S("", OR, {
+					S("parameter", AND, {SBN, S("name", F_VAR), SBN, S("="), SBN, S("value", addr_calc)}),
+					S("parameter", AND, {SBN, S("value", addr_calc)})
 				})
 			})
 		}),
 		SBN, S(")", ")")
 	}),
-	S("", AND, {
+	S("calling", AND, {
 		S("(", "("), SBN,
 		S(")", ")")
 	})
@@ -665,12 +665,9 @@ Node statement(string* source, int* index, int indent) {
 			continue;
 		}
 
-		return Node{ "", "", ret };
-
+		return Node{ "lines", "", ret };
 
 	}
-
-
 
 
 	/*

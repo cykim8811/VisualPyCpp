@@ -31,6 +31,7 @@ public:
 	int cursor_y = 0;
 	int cursor_origin_x = 3;
 	int cursor_origin_y = 0;
+	bool focused = true;
 	bool clicked = false;
 	
 	int index = 0;
@@ -50,11 +51,12 @@ public:
 	void set_cursor(int index);
 	void set_cursor_origin(int index);
 
-	Node parse;
+	P parse;
 	int lastparse;
 
 	void draw_code(SDL_Renderer* renderer);
-	void draw_node(SDL_Renderer* renderer, Node target, int* lx, int* ly, SDL_Color col = {96, 128, 128});
+	void draw_node(SDL_Renderer* renderer, Node target, int* lx, int* ly, SDL_Color col = { 96, 128, 128 });
+	void draw_piece(SDL_Renderer* renderer, Node target, int* lx, int* ly, SDL_Color col = { 96, 128, 128 });
 
 	void analyze();
 

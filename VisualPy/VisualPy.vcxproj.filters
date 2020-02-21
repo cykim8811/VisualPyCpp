@@ -13,6 +13,15 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="소스 파일\Parser">
+      <UniqueIdentifier>{e2b507f5-3242-4671-9f2e-39ebeb83e57a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Window">
+      <UniqueIdentifier>{b8dbd5a7-b66b-4e72-a3d9-d3ba142b0df4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Executer">
+      <UniqueIdentifier>{3b36a06f-03c6-4737-88b4-66ac5d04dad7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -21,23 +30,29 @@
     <ClCompile Include="TextManager.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="CodeManager.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="RamManager.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="OutputManager.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="Format.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Statement.cpp">
-      <Filter>소스 파일</Filter>
+      <Filter>소스 파일\Parser</Filter>
     </ClCompile>
     <ClCompile Include="Parser.cpp">
-      <Filter>소스 파일</Filter>
+      <Filter>소스 파일\Parser</Filter>
+    </ClCompile>
+    <ClCompile Include="Statement.cpp">
+      <Filter>소스 파일\Parser</Filter>
+    </ClCompile>
+    <ClCompile Include="CodeManager.cpp">
+      <Filter>소스 파일\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="OutputManager.cpp">
+      <Filter>소스 파일\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="RamManager.cpp">
+      <Filter>소스 파일\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Piece.cpp">
+      <Filter>소스 파일\Executer</Filter>
+    </ClCompile>
+    <ClCompile Include="Executer.cpp">
+      <Filter>소스 파일\Executer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -60,6 +75,12 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Parser.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Piece.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Executer.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
