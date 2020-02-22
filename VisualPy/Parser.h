@@ -3,6 +3,12 @@
 #include "Statement.h"
 
 
+typedef struct line {
+	int indent;
+	Node data;
+	Node comment;
+};
+
 static string indent_text = "    ";
 
 int is_digit_0(string* source, int index);
@@ -16,4 +22,4 @@ Node addr_calc(string* source, int* index);
 Node addr_tuple(string* source, int* index);
 Node addr_tuple_nocalc(string* source, int* index);
 
-Node parse_source(string* source, int* index);
+vector<line> parse_source(string* source, int* index);

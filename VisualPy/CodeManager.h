@@ -36,7 +36,7 @@ public:
 	
 	int index = 0;
 
-	int line = 0;
+	int cur_line = 0;
 	string text;
 	TextManager* tm;
 	CodeManager(TextManager* textmanager);
@@ -50,8 +50,8 @@ public:
 	int get_cursor_origin();
 	void set_cursor(int index);
 	void set_cursor_origin(int index);
+	vector<line> lines;
 
-	P parse;
 	int lastparse;
 
 	void draw_code(SDL_Renderer* renderer);

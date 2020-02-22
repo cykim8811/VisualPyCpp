@@ -25,8 +25,9 @@ int max(int a, int b) {
 }
 
 void CodeManager::analyze() {
-	lastparse = 0;
-	parse = P(parse_source(&text, &lastparse)); // Stop Point
+	int index = 0;
+	lines = parse_source(&text, &index);
+	lastparse = index;
 }
 
 int CodeManager::get_cursor() {
@@ -78,7 +79,7 @@ CodeManager::CodeManager(TextManager* textmanager) {
 	cursor_bar = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_IBEAM);
 	text_update();
 	index = 0;
-	parse = parse_source(&text, &index);
+	// parse = P(parse_source(&text, &index));
 }
 
 CodeManager::~CodeManager() {
@@ -136,13 +137,13 @@ vector<Coloring> coloring_list{
 void CodeManager::draw_node(SDL_Renderer* renderer, Node target, int* lx, int* ly, SDL_Color col) {
 	if (target.subnode.size() == 0) {
 		for (int i = 0; i < target.data.size(); i++) {
-			if (*ly < line) continue;
+			if (*ly < cur_line) continue;
 			if (target.data[i] == '\n') {
 				*lx = 0;
 				*ly += 1;
 				continue;
 			}
-			tm->draw_char(renderer, 36 + tm->width * (*lx), tm->height * (*ly - line) + 2, target.data[i], col);
+			tm->draw_char(renderer, 36 + tm->width * (*lx), tm->height * (*ly - cur_line) + 2, target.data[i], col);
 			*lx += 1;
 		}
 	}
@@ -165,42 +166,13 @@ void CodeManager::draw_node(SDL_Renderer* renderer, Node target, int* lx, int* l
 	}
 }
 
-void CodeManager::draw_piece(SDL_Renderer* renderer, Node target, int* lx, int* ly, SDL_Color col) {
-	if (target.subnode.size() == 0) {
-		for (int i = 0; i < target.data.size(); i++) {
-			if (*ly < line) continue;
-			if (target.data[i] == '\n') {
-				*lx = 0;
-				*ly += 1;
-				continue;
-			}
-			tm->draw_char(renderer, 36 + tm->width * (*lx), tm->height * (*ly - line) + 2, target.data[i], col);
-			*lx += 1;
-		}
-	}
-	else {
-		for (int i = 0; i < target.subnode.size(); i++) {
-			SDL_Color tcol = { 96, 96, 96 };
-			for (int j = 0; j < coloring_list.size(); j++) {
-				if (target.name == coloring_list[j].name) {
-					for (int k = 0; k < coloring_list[j].key.size(); k++) {
-						if (coloring_list[j].key[k] == target.subnode[i].name) {
-							tcol = coloring_list[j].col[k];
-							break;
-						}
-					}
-					break;
-				}
-			}
-			draw_piece(renderer, target.subnode[i], lx, ly, tcol);
-		}
-	}
-}
-
-
 void CodeManager::draw_code(SDL_Renderer* renderer) {
 	int lx = 0, ly = 0;
-	draw_piece(renderer, parse, &lx, &ly);
+	for (int i = 0; i < lines.size(); i++) {
+		lx += indent_text.length() * max(lines[i].indent, 0);
+		draw_node(renderer, lines[i].data, &lx, &ly);
+		draw_node(renderer, lines[i].comment, &lx, &ly);
+	}
 }
 
 
@@ -217,8 +189,8 @@ void CodeManager::onDraw(SDL_Renderer* renderer, int width, int height) {
 
 	int lastline = int(floor(height / tm->height));
 
-	if (count(text.begin(), text.end(), '\n') + 1 - line < lastline) {
-		lastline = count(text.begin(), text.end(), '\n') + 1 - line;
+	if (count(text.begin(), text.end(), '\n') + 1 - cur_line < lastline) {
+		lastline = count(text.begin(), text.end(), '\n') + 1 - cur_line;
 	}
 
 	int yoffset = 2;
@@ -284,7 +256,7 @@ void CodeManager::onEvent(SDL_Event event) {
 		if (event.button.button == SDL_BUTTON_LEFT) {
 			text_update();
 			cursorblink = cursorblinkmax;
-			int px = int(floor((event.button.x - 32) / tm->width)) + line;
+			int px = int(floor((event.button.x - 32) / tm->width)) + cur_line;
 			int py = int(floor((event.button.y - 4) / tm->height));
 			if (px < 0 || py < 0) {
 				break;
@@ -315,7 +287,7 @@ void CodeManager::onEvent(SDL_Event event) {
 			SDL_SetCursor(cursor_bar);
 			//text_update();
 			cursorblink = cursorblinkmax;
-			int px = max(0, int(floor((event.button.x - 32) / tm->width)) + line);
+			int px = max(0, int(floor((event.button.x - 32) / tm->width)) + cur_line);
 			int py = max(0, int(floor((event.button.y - 4) / tm->height)));
 			int n_line = linelength.size();
 			// Clicking after last line
