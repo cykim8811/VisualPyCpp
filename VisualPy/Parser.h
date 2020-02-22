@@ -9,7 +9,7 @@ typedef struct line {
 	Node comment;
 };
 
-static string indent_text = "    ";
+static string indent_text = "  ";
 
 int is_digit_0(string* source, int index);
 int is_digit_1(string* source, int index);

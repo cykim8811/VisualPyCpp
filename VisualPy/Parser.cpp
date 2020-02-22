@@ -41,6 +41,21 @@ int is_string_sl_dq(string* source, int index) {
 	return index + 1;
 }
 
+int is_string_sl_sq(string* source, int index) {
+	if (source->at(index) == '\n' || source->at(index) == '\'') {
+		return -1;
+	}
+	return index + 1;
+}
+
+int is_string_ml_dq(string* source, int index) {
+	if (source->length() <= index + 2) { return -1; }
+	if (source->substr(index, 3) == "\"\"\"") {
+		return -1;
+	}
+	return index + 1;
+}
+
 int is_comment(string* source, int index) {
 	if (index >= source->size() || source->at(index) == '\n') {
 		return -1;
@@ -130,10 +145,22 @@ S s_tuple("variable", AND, {
 		S(")")
 	})
 });
-S s_string("variable", AND, {
-	S("\""),
-	S("string", Format(REP, {Format(FTN, is_string_sl_dq)})),
-	S("\"")
+S s_string("", OR, {
+	S("variable", AND, {
+		S("\"\"\""),
+		S("string", Format(REP, {Format(FTN, is_string_ml_dq)})),
+		S("\"\"\"")
+	}),
+	S("variable", AND, {
+		S("\""),
+		S("string", Format(REP, {Format(FTN, is_string_sl_dq)})),
+		S("\"")
+	}),
+	S("variable", AND, {
+		S("\'"),
+		S("string", Format(REP, {Format(FTN, is_string_sl_sq)})),
+		S("\'")
+	}),
 });
 S s_bracket("", AND, {
 	S("("), SBN,
