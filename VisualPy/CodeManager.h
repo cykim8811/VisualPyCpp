@@ -54,7 +54,7 @@ public:
 	void set_cursor(int index);
 	void set_cursor_origin(int index);
 	vector<line> lines;
-	Executer* exec;
+	Executer exec;
 
 	int lastparse;
 

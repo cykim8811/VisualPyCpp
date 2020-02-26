@@ -10,14 +10,14 @@ class Letter
 public:
 
 	Letter();
-	Letter(int _cx, int _cy, char c, SDL_Color _col);
+	Letter(float _cx, float _cy, char c, SDL_Color _col);
 
 
-	int cx, cy;
-	int tx, ty;
+	float cx, cy;
+	float tx, ty;
 	char c;
 	SDL_Renderer* renderer;
 	SDL_Color col;
 
-	void draw(TextManager* tm);
+	void draw(TextManager* tm, int cur_line);
 };

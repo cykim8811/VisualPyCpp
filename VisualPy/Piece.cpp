@@ -15,17 +15,17 @@ P::P() {
 	std::cout << "Piece default constructor called" << endl;
 }
 
-P::P(Node target, int* lx, int* ly, SDL_Color tcol) {
+P::P(Node target, float* lx, float* ly, SDL_Color tcol) {
 	name = target.name;
 	if (target.subnode.size() == 0) {
 		for (int i = 0; i < target.data.size(); i++) {
-			data.push_back(Letter(*lx, *ly, target.data.at(i), tcol));
 			if (target.data.at(i) == '\n') {
-				ly++;
-				lx = 0;
+				*ly += 1;
+				*lx = 0;
 			}
 			else {
-				lx++;
+				data.push_back(Letter(*lx, *ly, target.data.at(i), tcol));
+				*lx += 1;
 			}
 		}
 	}
@@ -48,15 +48,15 @@ P::P(Node target, int* lx, int* ly, SDL_Color tcol) {
 	}
 }
 
-void P::draw(TextManager *tm) {
+void P::draw(TextManager *tm, int cur_length) {
 	if (subnode.size() == 0) {
 		for (int i = 0; i < data.size(); i++) {
-			data[i].draw(tm);
+			data[i].draw(tm, cur_length);
 		}
 	}
 	else {
 		for (int i = 0; i < subnode.size(); i++) {
-			subnode[i].draw(tm);
+			subnode[i].draw(tm, cur_length);
 		}
 	}
 }

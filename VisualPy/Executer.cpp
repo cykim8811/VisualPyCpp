@@ -5,36 +5,25 @@
 Data::Data() {}
 Data::~Data() {}
 
-bool Executer::reduce(Node* target) {
-	if (target->name == "calc_add") {
-		Node* A = &target->subnode[0];
-		Node* B = &target->subnode[4];
-		if (!reduce(A)) {
-			return false;
-		}
-		if (!reduce(B)) {
-			return false;
-		}
-
-	}
-	else if (target->name == "int") {
-		return true;
-	}
-}
+Executer::Executer() {}
 
 Executer::Executer(vector<line> *lines) {
 	source = lines;
-	int lx = 0, ly = 0;
+	float lx = 0, ly = 0;
 	for (int i = 0; i < lines->size(); i++) {
 		if (lines->at(i).indent == -1) {
-			ly++;
+			P pcs = P(lines->at(i).comment, &lx, &ly, { 96, 128, 128 });
+			pieces.push_back(pcs);
 			continue;
 		}
-		lx += lines->at(i).indent;
-		pieces.push_back(P(lines->at(i).data, &lx, &ly, { 96, 128, 128 } ));
-		ly++;
+		lx += lines->at(i).indent * indent_text.length();
+		P pcs = P(lines->at(i).data, &lx, &ly, { 96, 128, 128 });
+		pieces.push_back(pcs);
+		P pcscmt = P(lines->at(i).comment, &lx, &ly, { 96, 128, 128 });
+		pieces.push_back(pcscmt);
 	}
 }
+
 
 int Executer::get(string name) {
 	for (int i = 0; i < ram.size(); i++) {
@@ -44,6 +33,7 @@ int Executer::get(string name) {
 	}
 	return -1;
 }
+
 
 int Executer::put(string name, Data data) {
 	int ind = get(name);
@@ -63,6 +53,6 @@ int Executer::put(string name, Data data) {
 
 void Executer::draw(TextManager* tm) {
 	for (int i = 0; i < pieces.size(); i++) {
-		pieces.at(i).draw(tm);
+		pieces.at(i).draw(tm, cur_length);
 	}
 }

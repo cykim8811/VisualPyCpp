@@ -2,9 +2,10 @@
 
 #include <string>
 #include <vector>
-#include "Parser.h"
 #include "Letter.h"
 #include "Piece.h"
+
+#include "Parser.h"
 
 
 using namespace std;
@@ -31,6 +32,7 @@ public:
 	int current_line = 0;
 	int current_indent = 0;
 
+	Executer();
 	Executer(vector<line>* lines);
 
 	vector<P> pieces;
@@ -38,8 +40,7 @@ public:
 
 	int get(string name);
 	int put(string name, Data data);
-
-	bool reduce(Node* target);
+	int cur_length = 0;
 
 	void draw(TextManager* tm);
 };

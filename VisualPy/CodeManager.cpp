@@ -207,7 +207,7 @@ void CodeManager::onDraw(SDL_Renderer * renderer, int width, int height) {
 		draw_code();
 	}
 	else {
-		exec->draw(tm);
+		exec.draw(tm);
 	}
 
 	for (int i = 0; i <lastline; i++) {
@@ -532,7 +532,7 @@ void CodeManager::onEvent(SDL_Event event) {
 		else if (event.key.keysym.sym == SDLK_F5) {
 			if (!isRunning) {
 				isRunning = true;
-				exec = &Executer(&lines);
+				exec = Executer(&lines);
 			}
 		}
 		break;
