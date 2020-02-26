@@ -7,6 +7,9 @@ typedef struct Node {
 	string data;
 	vector<Node> subnode;
 };
+
+Node copyNode(Node target);
+
 string printNode(Node target);
 string reformat(Node target);
 

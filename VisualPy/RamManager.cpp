@@ -34,7 +34,7 @@ void RamManager::onDraw(SDL_Renderer* renderer, int width, int height) {
 		// Draw Code
 		int j = 0;
 		for (; text[temp_codeindex] != '\n' && text.length() > temp_codeindex; temp_codeindex += 1) {
-			tm->draw_char(renderer, 8 + tm->width * j, tm->height * i + yoffset, text[temp_codeindex], { 192, 192, 192 });
+			tm->draw_char(8 + tm->width * j, tm->height * i + yoffset, text[temp_codeindex], { 192, 192, 192 });
 			j++;
 		}
 		temp_codeindex++;

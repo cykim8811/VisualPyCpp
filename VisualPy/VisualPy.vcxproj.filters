@@ -48,6 +48,15 @@
     <ClCompile Include="Parser.cpp">
       <Filter>소스 파일\Parser</Filter>
     </ClCompile>
+    <ClCompile Include="Executer.cpp">
+      <Filter>소스 파일\Executer</Filter>
+    </ClCompile>
+    <ClCompile Include="Letter.cpp">
+      <Filter>소스 파일\Executer</Filter>
+    </ClCompile>
+    <ClCompile Include="Piece.cpp">
+      <Filter>소스 파일\Executer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TextManager.h">
@@ -69,6 +78,15 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Parser.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Executer.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Letter.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Piece.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

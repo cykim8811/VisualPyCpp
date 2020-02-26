@@ -4,6 +4,7 @@
 #include "SDL.h"
 #include <vector>
 #include "Parser.h"
+#include "Executer.h"
 
 using namespace std;
 
@@ -36,6 +37,8 @@ public:
 	
 	int index = 0;
 
+	bool isRunning = false;
+
 	int cur_line = 0;
 	string text;
 	TextManager* tm;
@@ -51,13 +54,15 @@ public:
 	void set_cursor(int index);
 	void set_cursor_origin(int index);
 	vector<line> lines;
+	Executer* exec;
 
 	int lastparse;
 
-	void draw_code(SDL_Renderer* renderer);
-	void draw_node(SDL_Renderer* renderer, Node target, int* lx, int* ly, SDL_Color col = { 96, 128, 128 });
-	void draw_piece(SDL_Renderer* renderer, Node target, int* lx, int* ly, SDL_Color col = { 96, 128, 128 });
+	void draw_code();
+	void draw_node(Node target, int* lx, int* ly, SDL_Color col = { 96, 128, 128 });
+	void draw_piece(Node target, int* lx, int* ly, SDL_Color col = { 96, 128, 128 });
 
 	void analyze();
+	void run_code(SDL_Renderer* renderer, TextManager* tm);
 
 };

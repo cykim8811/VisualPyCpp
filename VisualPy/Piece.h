@@ -7,16 +7,17 @@
 
 #include "Executer.h"
 #include "Statement.h"
+#include "Letter.h"
 
 using namespace std;
 
 class P {
 public:
-	P(Node target);
-
+	P();
+	P(Node target, int *lx, int *ly, SDL_Color tcol);
 	string name;
-	string data;
+	vector<Letter> data;
 	vector<P> subnode;
 
-	Data process(Executer exec);
+	void draw(TextManager* tm);
 };

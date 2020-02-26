@@ -174,11 +174,11 @@ void onDraw(SDL_Renderer* renderer) {
 	SDL_SetRenderDrawColor(renderer, body_color_r, body_color_g, body_color_b, 255);
 	SDL_RenderFillRect(renderer, &SDL_Rect({ 0, title_height, window_width, menu_height }));
 	const char* ch1 = "Ram";
-	arialtm->draw_text(renderer, sepbar_width + 4, int(round(title_height + (menu_height / 2) - (arialtm->height / 2))) + 1, ch1, { 148, 148, 148 });
+	arialtm->draw_text(sepbar_width + 4, int(round(title_height + (menu_height / 2) - (arialtm->height / 2))) + 1, ch1, { 148, 148, 148 });
 	const char* ch2 = "Code";
-	arialtm->draw_text(renderer, sepbar1_x + sepbar_offset + 4, int(round(title_height + (menu_height / 2) - (arialtm->height / 2))) + 1, ch2, { 148, 148, 148 });
+	arialtm->draw_text(sepbar1_x + sepbar_offset + 4, int(round(title_height + (menu_height / 2) - (arialtm->height / 2))) + 1, ch2, { 148, 148, 148 });
 	const char* ch3 = "Output";
-	arialtm->draw_text(renderer, sepbar2_x + sepbar_offset + 4, int(round(title_height + (menu_height / 2) - (arialtm->height / 2))) + 1, ch3, { 148, 148, 148 });
+	arialtm->draw_text(sepbar2_x + sepbar_offset + 4, int(round(title_height + (menu_height / 2) - (arialtm->height / 2))) + 1, ch3, { 148, 148, 148 });
 
 	/* Contents */
 

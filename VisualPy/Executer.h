@@ -2,6 +2,10 @@
 
 #include <string>
 #include <vector>
+#include "Parser.h"
+#include "Letter.h"
+#include "Piece.h"
+
 
 using namespace std;
 
@@ -21,17 +25,21 @@ public:
 
 };
 
-
-class Executer
-{
+class Executer {
 public:
-	Executer(string(*_log)(string));
+	vector<line> *source;
+	int current_line = 0;
+	int current_indent = 0;
 
+	Executer(vector<line>* lines);
+
+	vector<P> pieces;
 	vector<Data> ram;
 
 	int get(string name);
 	int put(string name, Data data);
 
-	string(*log)(string);
+	bool reduce(Node* target);
 
+	void draw(TextManager* tm);
 };

@@ -3,6 +3,14 @@
 
 using namespace std;
 
+Node copyNode(Node target) {
+	vector<Node> lst;
+	for (int i = 0; i < target.subnode.size(); i++) {
+		lst.push_back(copyNode(target.subnode[i]));
+	}
+	return Node{ target.name, target.data, lst };
+}
+
 string printNode(Node target) {
 	if (target.subnode.size() == 0) {
 		if (target.name == "ignore") {

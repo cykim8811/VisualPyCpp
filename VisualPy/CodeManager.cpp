@@ -24,6 +24,7 @@ int max(int a, int b) {
 	}
 }
 
+
 void CodeManager::analyze() {
 	int index = 0;
 	lines = parse_source(&text, &index);
@@ -134,7 +135,7 @@ vector<Coloring> coloring_list{
 	{"comment", {"#", "text", }, {{32, 128, 48}, {32, 128, 48}, } },
 };
 
-void CodeManager::draw_node(SDL_Renderer* renderer, Node target, int* lx, int* ly, SDL_Color col) {
+void CodeManager::draw_node(Node target, int* lx, int* ly, SDL_Color col) {
 	if (target.subnode.size() == 0) {
 		for (int i = 0; i < target.data.size(); i++) {
 			if (*ly < cur_line) continue;
@@ -143,7 +144,7 @@ void CodeManager::draw_node(SDL_Renderer* renderer, Node target, int* lx, int* l
 				*ly += 1;
 				continue;
 			}
-			tm->draw_char(renderer, 36 + tm->width * (*lx), tm->height * (*ly - cur_line) + 2, target.data[i], col);
+			tm->draw_char(36 + tm->width * (*lx), tm->height * (*ly - cur_line) + 2, target.data[i], col);
 			*lx += 1;
 		}
 	}
@@ -161,22 +162,22 @@ void CodeManager::draw_node(SDL_Renderer* renderer, Node target, int* lx, int* l
 					break;
 				}
 			}
-			draw_node(renderer, target.subnode[i], lx, ly, tcol);
+			draw_node(target.subnode[i], lx, ly, tcol);
 		}
 	}
 }
 
-void CodeManager::draw_code(SDL_Renderer* renderer) {
+void CodeManager::draw_code() {
 	int lx = 0, ly = 0;
 	for (int i = 0; i < lines.size(); i++) {
 		lx += indent_text.length() * max(lines[i].indent, 0);
-		draw_node(renderer, lines[i].data, &lx, &ly);
-		draw_node(renderer, lines[i].comment, &lx, &ly);
+		draw_node(lines[i].data, &lx, &ly);
+		draw_node(lines[i].comment, &lx, &ly);
 	}
 }
 
 
-void CodeManager::onDraw(SDL_Renderer* renderer, int width, int height) {
+void CodeManager::onDraw(SDL_Renderer * renderer, int width, int height) {
 	// Draw Background color
 	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 	SDL_RenderClear(renderer);
@@ -202,21 +203,26 @@ void CodeManager::onDraw(SDL_Renderer* renderer, int width, int height) {
 	// Drawing Screen
 
 	// Draw Code
-	draw_code(renderer);
+	if (!isRunning) {
+		draw_code();
+	}
+	else {
+		exec->draw(tm);
+	}
 
 	for (int i = 0; i <lastline; i++) {
 		// Drawing linenumber
 		for (int j = 0; j < int(floor(log10(i + 1) + 1)); j++) {
 			int ch = int(floor((i + 1) / pow(10, j))) % 10;
 			const char c = '0' + ch;
-			tm->draw_char(renderer, 30 - tm->width * (j + 1), tm->height * i + yoffset, c, {176, 176, 176});
+			tm->draw_char(30 - tm->width * (j + 1), tm->height * i + yoffset, c, {176, 176, 176});
 		}
 
 
 		int j = 0;
 		for (; text[temp_codeindex] != '\n' && text.length() > temp_codeindex; temp_codeindex += 1) {
 			if (temp_codeindex >= lastparse) {
-				tm->draw_char(renderer, 36 + tm->width * j, tm->height * i + yoffset, text[temp_codeindex], { 160, 160, 160 });
+				tm->draw_char(36 + tm->width * j, tm->height * i + yoffset, text[temp_codeindex], { 160, 160, 160 });
 			}
 
 			// Background color when selected
@@ -232,7 +238,7 @@ void CodeManager::onDraw(SDL_Renderer* renderer, int width, int height) {
 		temp_codeindex++;
 	}
 	// Draw Cursor
-	if (focused && (cursorStatus == 0) && cursorblink > cursorblinkmax * 0.5) {
+	if (!isRunning && focused && (cursorStatus == 0) && cursorblink > cursorblinkmax * 0.5) {
 		SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255);
 		SDL_RenderDrawLine(renderer, 35 + tm->width * cursor_x, tm->height * cursor_y + yoffset, 35 + tm->width * cursor_x, tm->height * (cursor_y + 1) + yoffset - 1);
 		SDL_SetRenderDrawColor(renderer, 128, 128, 128, 96);
@@ -522,6 +528,12 @@ void CodeManager::onEvent(SDL_Event event) {
 			text_update();
 			set_cursor(cursor);
 			set_cursor_origin(cursor_origin);
+		}
+		else if (event.key.keysym.sym == SDLK_F5) {
+			if (!isRunning) {
+				isRunning = true;
+				exec = &Executer(&lines);
+			}
 		}
 		break;
 		// TODO: add undo and redo
