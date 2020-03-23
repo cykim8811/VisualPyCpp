@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 using namespace std;
-/*
+
 void OutputManager::send_message(char* data) {
 	boost::system::error_code r_error;
 	int len_r_buf = strnlen_s(data, 128 - 1);
@@ -11,7 +11,7 @@ void OutputManager::send_message(char* data) {
 }
 
 void client_run(OutputManager* self) {
-	cout << "Client Connected" << endl;
+	cout << "Connected" << endl;
 	while (true) {
 		char buf[128] = { 0 };
 		boost::system::error_code error;
@@ -29,7 +29,7 @@ void client_run(OutputManager* self) {
 		cout << "Server:" << buf << endl;
 		this_thread::sleep_for(0.01s);
 	}
-}*/
+}
 
 static PyObject* a(PyObject* self, PyObject* args) {
 	cout << "c++ a() called" << endl;
@@ -55,7 +55,8 @@ OutputManager::OutputManager(TextManager* textmanager) {
 	PyImport_AppendInittab("PyClassroom", &PyInit_PyClassroom);
 	Py_Initialize();
 	PyRun_SimpleString("from PyClassroom import *");
-	/*
+
+	static boost::asio::io_service io_service; // ... sorry
 	endpoint = new tcp::endpoint(boost::asio::ip::address::from_string(SERVER_IP), PORT);
 	socket = new tcp::socket(io_service);
 	boost::system::error_code c_error;
@@ -71,17 +72,15 @@ OutputManager::OutputManager(TextManager* textmanager) {
 			exit(-1);
 		}
 	}
-	cout << "Connected" << endl;
 
-	client_thread = new thread(client_run, this);*/
+	static thread client_thread(client_run, this);
 }
 
 OutputManager::~OutputManager() {
 	Py_Finalize();
-	/*
 	if (socket->is_open()) {
 		socket->close();
-	}*/
+	}
 }
 
 void OutputManager::onDraw(SDL_Renderer* renderer, int width, int height) {
@@ -110,5 +109,4 @@ void OutputManager::onEvent(SDL_Event event) {
 
 void OutputManager::execute(string cmd) {
 	PyRun_SimpleString(&cmd[0]);
-	//send_message(&cmd[0]);
 }

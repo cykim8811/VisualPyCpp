@@ -40,14 +40,12 @@ public:
 
 	bool tile[w * h] = { 1 };
 	int myId;
-	thread* client_thread;
-	/*
-	boost::asio::io_service io_service;
+
 	tcp::endpoint* endpoint;
 	tcp::socket* socket;
+
 	void send_message(char* data);
 	char* send_message_wait(char* data);
-*/
 };
 
 extern wchar_t python_home_dir[];
