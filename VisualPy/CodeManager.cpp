@@ -169,10 +169,18 @@ void CodeManager::draw_node(Node target, int* lx, int* ly, SDL_Color col) {
 
 void CodeManager::draw_code() {
 	int lx = 0, ly = 0;
+	executables.clear();
+	executable_node.clear();
 	for (int i = 0; i < lines.size(); i++) {
+		if (lines[i].indent == 0) {
+			tm->draw_char(5, tm->height * ly + 2, '*', { 32, 200, 48 });
+			executables.push_back(ly);
+			executable_node.push_back(i);
+		}
 		lx += indent_text.length() * max(lines[i].indent, 0);
 		draw_node(lines[i].data, &lx, &ly);
 		draw_node(lines[i].comment, &lx, &ly);
+
 	}
 }
 
@@ -260,6 +268,15 @@ void CodeManager::onEvent(SDL_Event event) {
 	{
 	case SDL_MOUSEBUTTONDOWN: {
 		if (event.button.button == SDL_BUTTON_LEFT) {
+			if (event.button.x < 32) {
+				int py = int(floor((event.button.y - 4) / tm->height));
+				for (int i = 0; i < executables.size(); i++) {
+					if (executables[i] == py) {
+						execute(executable_node[i]);
+					}
+				}
+				break;
+			}
 			text_update();
 			cursorblink = cursorblinkmax;
 			int px = int(floor((event.button.x - 32) / tm->width)) + cur_line;
@@ -529,12 +546,6 @@ void CodeManager::onEvent(SDL_Event event) {
 			set_cursor(cursor);
 			set_cursor_origin(cursor_origin);
 		}
-		else if (event.key.keysym.sym == SDLK_F5) {
-			if (!isRunning) {
-				isRunning = true;
-				exec = Executer(&lines);
-			}
-		}
 		break;
 		// TODO: add undo and redo
 		// TODO: tab key and others
@@ -568,4 +579,19 @@ void CodeManager::text_update() {
 	}
 	linelength.push_back(cur_length);
 	analyze();
+}
+
+void CodeManager::execute(int target) {
+	string res = reformat(lines[target].data);
+	for (int i = target + 1; i < lines.size(); i++) {
+		if (lines[i].indent <= 0)
+			break;
+		res += "\n";
+		for (int k = 0; k < max(lines[i].indent, 0); k++) {
+			res += indent_text;
+		}
+		res += reformat(lines[i].data);
+	}
+
+	om->execute(res);
 }

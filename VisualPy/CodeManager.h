@@ -5,6 +5,7 @@
 #include <vector>
 #include "Parser.h"
 #include "Executer.h"
+#include "OutputManager.h"
 
 using namespace std;
 
@@ -42,6 +43,7 @@ public:
 	int cur_line = 0;
 	string text;
 	TextManager* tm;
+	OutputManager* om;
 	CodeManager(TextManager* textmanager);
 	~CodeManager();
 
@@ -65,4 +67,8 @@ public:
 	void analyze();
 	void run_code(SDL_Renderer* renderer, TextManager* tm);
 
+	void execute(int target);
+
+	vector<int> executables;
+	vector<int> executable_node;
 };

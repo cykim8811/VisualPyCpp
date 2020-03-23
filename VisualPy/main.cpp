@@ -22,15 +22,13 @@ SDL_Cursor* arrowcursor;
 
 CodeManager* CodeWindow;
 OutputManager* OutputWindow;
-RamManager* RamWindow;
 
 
 namespace layout {
 	int title_height = 48;
 	int menu_height = 24;
 	int statusbar_height = 18;
-	int sepbar1_w = 320;
-	int sepbar2_w = 320;
+	int sepbar1_w = 970;
 	int sepbar_width = 5;
 
 	int font_width = 8;
@@ -50,26 +48,24 @@ void onEvent(SDL_Event event) {
 	SDL_GetWindowSize(window, &window_width, &window_height);
 
 	int sepbar_offset = int(floor((sepbar_width - 1) / 2));
-	int sepbar1_x = sepbar1_w,
-		sepbar2_x = window_width - sepbar2_w;
+	int sepbar1_x = sepbar1_w;
 	bool cursorOut = false;
 	switch (event.type)
 	{
 	case SDL_MOUSEBUTTONDOWN:
 		if (event.button.button == SDL_BUTTON_LEFT) {
 			if (event.button.y > title_height + menu_height && event.button.y < window_height - statusbar_height) {
-				if (event.button.x > sepbar_width&& event.button.x < sepbar1_x - sepbar_offset) {
+				if (event.button.x < sepbar1_x - sepbar_offset) {
 					SDL_Event e(event);
 					e.button.x -= sepbar_width;
 					e.button.y -= title_height + menu_height;
-					RamWindow->onEvent(e);
-					RamWindow->clicked = true;
+					OutputWindow->onEvent(e);
+					OutputWindow->clicked = true;
 
 					CodeWindow->focused = false;
-					RamWindow->focused = true;
-					OutputWindow->focused = false;
+					OutputWindow->focused = true;
 				}
-				else if (event.button.x > sepbar1_x + sepbar_offset && event.button.x < sepbar2_x - sepbar_offset) {
+				else {
 					SDL_Event e(event);
 					e.button.x -= sepbar1_x + sepbar_offset;
 					e.button.y -= title_height + menu_height;
@@ -77,19 +73,7 @@ void onEvent(SDL_Event event) {
 					CodeWindow->clicked = true;
 
 					CodeWindow->focused = true;
-					RamWindow->focused = false;
 					OutputWindow->focused = false;
-				}
-				else if (event.button.x > sepbar2_x + sepbar_offset && event.button.x < window_width - sepbar_width) {
-					SDL_Event e(event);
-					e.button.x -= sepbar2_x + sepbar_offset;
-					e.button.y -= title_height + menu_height;
-					OutputWindow->onEvent(e);
-					OutputWindow->clicked = true;
-
-					CodeWindow->focused = false;
-					RamWindow->focused = false;
-					OutputWindow->focused = true;
 				}
 			}
 		}
@@ -98,15 +82,11 @@ void onEvent(SDL_Event event) {
 		SDL_Event e1(event);
 		e1.button.x -= sepbar_width;
 		e1.button.y -= title_height + menu_height;
-		RamWindow->onEvent(e1);
+		OutputWindow->onEvent(e1);
 		SDL_Event e2(event);
 		e2.button.x -= sepbar1_x + sepbar_offset;
 		e2.button.y -= title_height + menu_height;
 		CodeWindow->onEvent(e2);
-		SDL_Event e3(event);
-		e3.button.x -= sepbar2_x + sepbar_offset;
-		e3.button.y -= title_height + menu_height;
-		OutputWindow->onEvent(e3);
 		if (!(event.button.y > title_height + menu_height && event.button.y < window_height - statusbar_height)) {
 			// Mouse moved out of all screen
 			// Set cursor to arrow(default)
@@ -116,27 +96,19 @@ void onEvent(SDL_Event event) {
 	case SDL_MOUSEBUTTONUP:
 		SDL_Event e(event);
 		e.button.y -= title_height + menu_height;
-		if (RamWindow->clicked) {
-			e.button.x -= sepbar_width;
-			RamWindow->onEvent(e);
-			RamWindow->clicked = false;
-		}
 		if (CodeWindow->clicked) {
-			e.button.x -= sepbar1_x + sepbar_offset - sepbar_width;
+			e.button.x -= sepbar_width;
 			CodeWindow->onEvent(e);
 			CodeWindow->clicked = false;
 		}
 		if (OutputWindow->clicked) {
-			e.button.x -= sepbar2_x + sepbar_offset - (sepbar1_x + sepbar_offset);
+			e.button.x -= sepbar1_x + sepbar_offset - sepbar_width;
 			OutputWindow->onEvent(e);
 			OutputWindow->clicked = false;
 		}
 		break;
 	case SDL_KEYDOWN:
 	case SDL_TEXTINPUT:
-		if (RamWindow->focused) {
-			RamWindow->onEvent(event);
-		}
 		if (CodeWindow->focused) {
 			CodeWindow->onEvent(event);
 		}
@@ -150,7 +122,6 @@ void onEvent(SDL_Event event) {
 }
 
 void onUpdate(double dT) {
-	RamWindow->onUpdate(dT);
 	CodeWindow->onUpdate(dT);
 	OutputWindow->onUpdate(dT);
 }
@@ -160,8 +131,7 @@ void onDraw(SDL_Renderer* renderer) {
 	int window_width, window_height;
 	SDL_GetWindowSize(window, &window_width, &window_height);
 
-	int sepbar1_x = sepbar1_w,
-		sepbar2_x = window_width - sepbar2_w;
+	int sepbar1_x = sepbar1_w;
 
 	int sepbar_offset = int(floor((sepbar_width - 1) / 2));
 	
@@ -173,12 +143,10 @@ void onDraw(SDL_Renderer* renderer) {
 	// Menubox
 	SDL_SetRenderDrawColor(renderer, body_color_r, body_color_g, body_color_b, 255);
 	SDL_RenderFillRect(renderer, &SDL_Rect({ 0, title_height, window_width, menu_height }));
-	const char* ch1 = "Ram";
+	const char* ch1 = "Screen";
 	arialtm->draw_text(sepbar_width + 4, int(round(title_height + (menu_height / 2) - (arialtm->height / 2))) + 1, ch1, { 148, 148, 148 });
 	const char* ch2 = "Code";
 	arialtm->draw_text(sepbar1_x + sepbar_offset + 4, int(round(title_height + (menu_height / 2) - (arialtm->height / 2))) + 1, ch2, { 148, 148, 148 });
-	const char* ch3 = "Output";
-	arialtm->draw_text(sepbar2_x + sepbar_offset + 4, int(round(title_height + (menu_height / 2) - (arialtm->height / 2))) + 1, ch3, { 148, 148, 148 });
 
 	/* Contents */
 
@@ -187,42 +155,31 @@ void onDraw(SDL_Renderer* renderer) {
 	SDL_Texture* ramTexture, * codeTexture, * outputTexture;
 
 	// RamWindow
-	target_width = int(round(sepbar1_x - sepbar_width * 1.5 + 0.5));
-	target_height = window_height - title_height - menu_height - statusbar_height;
-	ramTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET,
-		target_width, target_height);
-	SDL_SetRenderTarget(renderer, ramTexture);
-	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-	SDL_RenderClear(renderer);
-	RamWindow->onDraw(renderer, target_width, target_height);
-	SDL_SetRenderTarget(renderer, NULL);
-	targetRect = { sepbar_width, title_height + menu_height, target_width, target_height };
-	SDL_RenderCopy(renderer, ramTexture, NULL, &targetRect);
-	
-	// CodeWindow
-	target_width = sepbar2_x - sepbar1_x - sepbar_width;
+
+	// OutputWindow
+	target_width = sepbar1_x - sepbar_width;
 	target_height = window_height - title_height - menu_height - statusbar_height;
 	codeTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET,
 		target_width, target_height);
 	SDL_SetRenderTarget(renderer, codeTexture);
 	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 	SDL_RenderClear(renderer);
-	CodeWindow->onDraw(renderer, target_width, target_height);
+	OutputWindow->onDraw(renderer, target_width, target_height);
 	SDL_SetRenderTarget(renderer, NULL);
-	targetRect = { sepbar1_x + int((sepbar_width - 1) / 2), title_height + menu_height, target_width, target_height };
+	targetRect = { sepbar_width, title_height + menu_height, target_width, target_height };
 	SDL_RenderCopy(renderer, codeTexture, NULL, &targetRect);
 	
-	// OutputWindow
-	target_width = int(round(window_width - sepbar2_x - sepbar_width * 1.5 + 0.5));
+	// CodeWindow
+	target_width = int(round(window_width - sepbar1_x - sepbar_width * 1.5 + 0.5));
 	target_height = window_height - title_height - menu_height - statusbar_height;
 	outputTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET,
 		target_width, target_height);
 	SDL_SetRenderTarget(renderer, outputTexture);
 	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 	SDL_RenderClear(renderer);
-	OutputWindow->onDraw(renderer, target_width, target_height);
+	CodeWindow->onDraw(renderer, target_width, target_height);
 	SDL_SetRenderTarget(renderer, NULL);
-	targetRect = { sepbar2_x + int((sepbar_width - 1) / 2), title_height + menu_height, target_width, target_height };
+	targetRect = { sepbar1_x + int((sepbar_width - 1) / 2), title_height + menu_height, target_width, target_height };
 	SDL_RenderCopy(renderer, outputTexture, NULL, &targetRect);
 
 
@@ -253,43 +210,42 @@ void onDraw(SDL_Renderer* renderer) {
 	SDL_SetRenderDrawColor(renderer, body_color_r, body_color_g, body_color_b, 255);
 	SDL_RenderFillRect(renderer, &SDL_Rect({ 0, total_height, sepbar_width, window_height - total_height }));
 	SDL_RenderFillRect(renderer, &SDL_Rect({ sepbar1_x - sepbar_offset, total_height, sepbar_width, window_height - total_height }));
-	SDL_RenderFillRect(renderer, &SDL_Rect({ sepbar2_x - sepbar_offset, total_height, sepbar_width, window_height - total_height }));
 	SDL_RenderFillRect(renderer, &SDL_Rect({ window_width - sepbar_width, total_height, sepbar_width, window_height - total_height }));
 
 	// Shadow under Seperate bar
 	SDL_SetRenderDrawColor(renderer, 8, 8, 8, 16);
 	SDL_RenderDrawLine(renderer, sepbar1_x - sepbar_offset - 1, total_height, sepbar1_x - sepbar_offset - 1, window_height);
-	SDL_RenderDrawLine(renderer, sepbar2_x - sepbar_offset - 1, total_height, sepbar2_x - sepbar_offset - 1, window_height);
 	SDL_RenderDrawLine(renderer, window_width - sepbar_width - 1, total_height, window_width - sepbar_width - 1, window_height);
 	SDL_SetRenderDrawColor(renderer, 8, 8, 8, 8);
 	SDL_RenderDrawLine(renderer, sepbar1_x - sepbar_offset - 2, total_height, sepbar1_x - sepbar_offset - 2, window_height);
-	SDL_RenderDrawLine(renderer, sepbar2_x - sepbar_offset - 2, total_height, sepbar2_x - sepbar_offset - 2, window_height);
 	SDL_RenderDrawLine(renderer, window_width - sepbar_width - 2, total_height, window_width - sepbar_width - 2, window_height);
 
 	SDL_SetRenderDrawColor(renderer, 8, 8, 8, 80);
 	SDL_RenderDrawLine(renderer, sepbar1_x + sepbar_offset + 1, total_height + 1, sepbar1_x + sepbar_offset + 1, window_height);
-	SDL_RenderDrawLine(renderer, sepbar2_x + sepbar_offset + 1, total_height + 1, sepbar2_x + sepbar_offset + 1, window_height);
 	SDL_RenderDrawLine(renderer, 0 + sepbar_width, total_height + 1, 0 + sepbar_width, window_height);
 	SDL_SetRenderDrawColor(renderer, 8, 8, 8, 56);
 	SDL_RenderDrawLine(renderer, sepbar1_x + sepbar_offset + 2, total_height + 2, sepbar1_x + sepbar_offset + 2, window_height);
-	SDL_RenderDrawLine(renderer, sepbar2_x + sepbar_offset + 2, total_height + 2, sepbar2_x + sepbar_offset + 2, window_height);
 	SDL_RenderDrawLine(renderer, 0 + sepbar_width + 1, total_height + 2, 0 + sepbar_width + 1, window_height);
 	SDL_SetRenderDrawColor(renderer, 8, 8, 8, 16);
 	SDL_RenderDrawLine(renderer, sepbar1_x + sepbar_offset + 3, total_height + 2, sepbar1_x + sepbar_offset + 3, window_height);
-	SDL_RenderDrawLine(renderer, sepbar2_x + sepbar_offset + 3, total_height + 2, sepbar2_x + sepbar_offset + 3, window_height);
 	SDL_RenderDrawLine(renderer, 0 + sepbar_width + 2, total_height + 2, 0 + sepbar_width + 2, window_height);
 	
 	// Status bar under window
 	SDL_SetRenderDrawColor(renderer, body_color_r, body_color_g, body_color_b, 255);
 	SDL_RenderFillRect(renderer, &SDL_Rect({ 0, window_height - statusbar_height, window_width, statusbar_height }));
 
-	SDL_DestroyTexture(ramTexture);
 	SDL_DestroyTexture(codeTexture);
 	SDL_DestroyTexture(outputTexture);
 }
 
 
+wchar_t python_home_dir[1000];
+
 int main(int args, char* argv[]) {
+	size_t size;
+	if (args > 1) {
+		mbstowcs_s(&size, python_home_dir, argv[1], strlen(argv[1]));
+	}
 	SDL_Init(SDL_INIT_EVERYTHING);
 	TTF_Init();
 	window = SDL_CreateWindow(
@@ -311,9 +267,7 @@ int main(int args, char* argv[]) {
 	OutputManager om = OutputManager(&omtm);
 	OutputWindow = &om;
 
-	TextManager rmtm(renderer, font, 8, 16);
-	RamManager rm = RamManager(&rmtm);
-	RamWindow = &rm;
+	cm.om = OutputWindow;
 
 	TextManager atm = TextManager(renderer, arialfont, 8, 16);
 

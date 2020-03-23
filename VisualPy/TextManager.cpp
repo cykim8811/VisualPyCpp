@@ -6,7 +6,6 @@ TextManager::TextManager(SDL_Renderer* _renderer, TTF_Font* _font, int _width, i
 	width = _width;
 	height = _height;
 	renderer = _renderer;
-	printf("C");
 	for (int i = 32; i < 128; i++) {
 		SDL_Surface* tsurf = TTF_RenderText_Blended(font, (const char*)&i, { 255, 255, 255 });
 		rendered[i] = SDL_CreateTextureFromSurface(renderer, tsurf);
@@ -15,7 +14,6 @@ TextManager::TextManager(SDL_Renderer* _renderer, TTF_Font* _font, int _width, i
 }
 
 TextManager::~TextManager() {
-	printf("D");
 	for (int i = 32; i < 128; i++) {
 		SDL_DestroyTexture(rendered[i]);
 	}

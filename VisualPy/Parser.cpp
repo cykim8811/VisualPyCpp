@@ -2,6 +2,7 @@
 #include "Parser.h"
 #include "Statement.h"
 #include <iostream>
+#include "Piece.h"
 
 using namespace std;
 
