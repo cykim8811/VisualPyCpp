@@ -5,9 +5,12 @@
 #include <iostream> 
 #include <boost/asio.hpp>
 #include <Python.h>
+#include "SDL2_gfxPrimitives.h"
+#include <mutex>
+#include <future>
 
-const char SERVER_IP[] = "127.0.0.1";
-const unsigned short PORT = 8990;
+extern char* SERVER_IP;
+extern unsigned short PORT;
 
 using boost::asio::ip::tcp;
 using namespace std;
@@ -16,9 +19,13 @@ class Arrow {
 public:
 	int x, y, dir;
 	int uuid;
+	int color = 3;
+	
+	float dx, dy, ddir;
 };
 
 const int w = 30, h = 20;
+const int tile_size = 32;
 
 class OutputManager {
 public:
@@ -38,7 +45,7 @@ public:
 	PyObject* main_module;
 	PyObject* main_namespace;
 
-	bool tile[w * h] = { 1 };
+	int tile[w * h];
 	int myId;
 
 	tcp::endpoint* endpoint;
@@ -46,6 +53,15 @@ public:
 
 	void send_message(char* data);
 	char* send_message_wait(char* data);
+
+	vector<Arrow*> arrows;
+	vector<char*> returns;
+
+	thread* client_thread;
 };
 
 extern wchar_t python_home_dir[];
+
+extern OutputManager* global_om;
+
+extern void event_func(void);

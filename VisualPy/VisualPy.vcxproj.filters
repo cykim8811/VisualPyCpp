@@ -22,6 +22,12 @@
     <Filter Include="소스 파일\Executer">
       <UniqueIdentifier>{3b36a06f-03c6-4737-88b4-66ac5d04dad7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="소스 파일\gfx">
+      <UniqueIdentifier>{8e130666-1b8b-47dd-aca7-7302a1b3ca77}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\gfx">
+      <UniqueIdentifier>{ffa3689c-47de-4c40-938e-f1c4cb69958d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -57,6 +63,18 @@
     <ClCompile Include="Piece.cpp">
       <Filter>소스 파일\Executer</Filter>
     </ClCompile>
+    <ClCompile Include="SDL2_rotozoom.c">
+      <Filter>소스 파일\gfx</Filter>
+    </ClCompile>
+    <ClCompile Include="SDL2_imageFilter.c">
+      <Filter>소스 파일\gfx</Filter>
+    </ClCompile>
+    <ClCompile Include="SDL2_gfxPrimitives.c">
+      <Filter>소스 파일\gfx</Filter>
+    </ClCompile>
+    <ClCompile Include="SDL2_framerate.c">
+      <Filter>소스 파일\gfx</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TextManager.h">
@@ -88,6 +106,21 @@
     </ClInclude>
     <ClInclude Include="Piece.h">
       <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="SDL2_gfxPrimitives.h">
+      <Filter>헤더 파일\gfx</Filter>
+    </ClInclude>
+    <ClInclude Include="SDL2_framerate.h">
+      <Filter>헤더 파일\gfx</Filter>
+    </ClInclude>
+    <ClInclude Include="SDL2_imageFilter.h">
+      <Filter>헤더 파일\gfx</Filter>
+    </ClInclude>
+    <ClInclude Include="SDL2_rotozoom.h">
+      <Filter>헤더 파일\gfx</Filter>
+    </ClInclude>
+    <ClInclude Include="SDL2_gfxPrimitives_font.h">
+      <Filter>헤더 파일\gfx</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -9,6 +9,7 @@
 #include "Parser.h"
 #include <string>
 #include <iostream>
+#include <thread>
 
 using namespace std;
 
@@ -238,14 +239,52 @@ void onDraw(SDL_Renderer* renderer) {
 	SDL_DestroyTexture(outputTexture);
 }
 
+bool running = true;
+
+void draw_func(SDL_Renderer* renderer) {
+	while (true) {
+		SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+		SDL_RenderClear(renderer);
+		onDraw(renderer);
+		SDL_RenderPresent(renderer);
+		this_thread::sleep_for(0.01s);
+	}
+}
+
+void event_func() {
+	SDL_Event event;
+	while (SDL_PollEvent(&event)) {
+		switch (event.type)
+		{
+		case SDL_QUIT:
+			running = false;
+			break;
+		default:
+			onEvent(event);
+			break;
+		}
+	}
+}
 
 wchar_t python_home_dir[1000];
 
+
+char* SERVER_IP;
+unsigned short PORT = 8990;
+
 int main(int args, char* argv[]) {
+	HANDLE hInput;
+	DWORD prev_mode;
+	hInput = GetStdHandle(STD_INPUT_HANDLE);
+	GetConsoleMode(hInput, &prev_mode);
+	SetConsoleMode(hInput, prev_mode & ENABLE_EXTENDED_FLAGS);
+
+
+
 	size_t size;
-	if (args > 1) {
-		mbstowcs_s(&size, python_home_dir, argv[1], strlen(argv[1]));
-	}
+	mbstowcs_s(&size, python_home_dir, argv[1], strlen(argv[1]));
+	SERVER_IP = argv[2];
+	PORT = (short)stoi(argv[3]);
 	SDL_Init(SDL_INIT_EVERYTHING);
 	TTF_Init();
 	window = SDL_CreateWindow(
@@ -266,6 +305,7 @@ int main(int args, char* argv[]) {
 	TextManager omtm(renderer, font, 8, 16);
 	OutputManager om = OutputManager(&omtm);
 	OutputWindow = &om;
+	global_om = &om;
 
 	cm.om = OutputWindow;
 
@@ -289,25 +329,12 @@ int main(int args, char* argv[]) {
 	prevTime = SDL_GetPerformanceCounter();
 	currTime = 0;
 
-	bool running = true;
+	thread draw_thread(draw_func, renderer);
+
 	while (running) {
-		while (SDL_PollEvent(&event)) {
-			switch (event.type)
-			{
-			case SDL_QUIT:
-				running = false;
-				break;
-			default:
-				onEvent(event);
-				break;
-			}
-		}
+		event_func();
 		currTime = SDL_GetPerformanceCounter();
 		onUpdate((currTime - prevTime) / (float)SDL_GetPerformanceFrequency());
-		SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-		SDL_RenderClear(renderer);
-		onDraw(renderer);
-		SDL_RenderPresent(renderer);
 		prevTime = currTime;
 		SDL_Delay(10);
 	}
